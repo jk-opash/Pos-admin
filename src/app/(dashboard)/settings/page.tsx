@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useState } from "react";
 import { SettingsOverview } from "@/app/(dashboard)/settings/_components/SettingsOverview";

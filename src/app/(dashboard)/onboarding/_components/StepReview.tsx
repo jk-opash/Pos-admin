@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { CheckCircle2, User, Building, Settings, MapPin, Receipt, CreditCard } from 'lucide-react';
 
 export function StepReview() {

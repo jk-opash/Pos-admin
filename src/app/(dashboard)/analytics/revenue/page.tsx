@@ -5,13 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
-import {
-  Download,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  AlertCircle,
-} from "lucide-react";
+import { Download, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import {
   mockRevenueMetrics,
   mockRevenueTrends,
@@ -189,7 +183,7 @@ export default function RevenueAnalyticsDashboard() {
                   dx={-10}
                 />
                 <Tooltip
-                  formatter={(value: any) => formatCurrency(value, true)}
+                  formatter={(value) => formatCurrency(Number(value), true)}
                   contentStyle={{
                     borderRadius: "8px",
                     border: `1px solid ${colors.border}`,
@@ -246,7 +240,7 @@ export default function RevenueAnalyticsDashboard() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: any) => formatCurrency(value, true)}
+                  formatter={(value) => formatCurrency(Number(value), true)}
                   contentStyle={{
                     borderRadius: "8px",
                     border: "none",
@@ -398,9 +392,7 @@ export default function RevenueAnalyticsDashboard() {
                   dx={-10}
                 />
                 <Tooltip
-                  formatter={(value: any) =>
-                    formatCurrency(value as number, true)
-                  }
+                  formatter={(value) => formatCurrency(Number(value), true)}
                   contentStyle={{
                     borderRadius: "8px",
                     border: `1px solid ${colors.border}`,
@@ -499,7 +491,7 @@ export default function RevenueAnalyticsDashboard() {
                   dx={-10}
                 />
                 <Tooltip
-                  formatter={(value: any) => `${value}%`}
+                  formatter={(value) => `${value}%`}
                   contentStyle={{
                     borderRadius: "8px",
                     border: `1px solid ${colors.border}`,
@@ -553,7 +545,7 @@ export default function RevenueAnalyticsDashboard() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: any) => formatCurrency(value, true)}
+                  formatter={(value) => formatCurrency(Number(value), true)}
                   contentStyle={{
                     borderRadius: "8px",
                     border: "none",

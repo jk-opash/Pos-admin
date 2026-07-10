@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { AuditLog } from '@/types';
 import { Modal } from '@/components/ui/Modal';

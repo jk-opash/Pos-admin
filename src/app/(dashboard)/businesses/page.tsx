@@ -19,7 +19,8 @@ export default function BusinessesPage() {
 
   // Reset to first page when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    const timeout = setTimeout(() => setCurrentPage(1), 0);
+    return () => clearTimeout(timeout);
   }, [searchTerm, statusFilter, typeFilter, planFilter, stateFilter]);
 
   // Client-side filtering

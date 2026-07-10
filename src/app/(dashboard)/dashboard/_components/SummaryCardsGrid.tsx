@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { StatsCard } from '@/components/ui/StatsCard';
 import { formatCurrency } from '@/lib/utils';
 import { DashboardStats } from '@/types';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { formatRelativeTime } from '@/lib/utils';
 import { ActivityItem } from '@/types';

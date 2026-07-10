@@ -194,6 +194,7 @@ export interface Payment {
   invoiceNumber: string;
   paidAt?: string;
   createdAt: string;
+  errorMessage?: string;
 }
 
 // ── Support Ticket ────────────────────────────────────────────────────────────
