@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+@theme inline {
+  /* Font Family */
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/40 shadow-glass;
+  }
+  
+  .glass-panel-dark {
+    @apply bg-brand-dark/80 backdrop-blur-xl border border-slate-700/50 shadow-glass-dark;
+  }
+
+  .premium-shadow {
+    @apply shadow-glow;
+  }
+
+  .premium-shadow-hover {
+    @apply shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 ease-spring;
+  }
+  
+  .animate-hover {
+    @apply transition-all duration-300 ease-spring hover:-translate-y-1 hover:shadow-float;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600;
+  }
+}
+
+/* We ensure scrollbars look clean in a light theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1; /* slate-300 */
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94A3B8; /* slate-400 */
+}
+
