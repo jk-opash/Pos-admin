@@ -87,10 +87,10 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
         <div className="h-px bg-brand-border w-full"></div>
 
         {/* Error Details if Failed */}
-        {payment.status === 'failed' && payment.errorMessage && (
+        {payment.status === 'failed' && (payment as any).errorMessage && (
           <div className="p-3 rounded-lg bg-red-50 border border-red-100">
             <p className="text-xs text-red-600 font-semibold mb-1">Failure Reason</p>
-            <p className="text-sm text-red-700">{payment.errorMessage}</p>
+            <p className="text-sm text-red-700">{(payment as any).errorMessage}</p>
           </div>
         )}
 
