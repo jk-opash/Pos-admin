@@ -1,19 +1,81 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchSubscriptions } from '@/store/slices/subscriptionSlice';
 import Link from 'next/link';
-import { Plus, CheckCircle2, Search } from 'lucide-react';
+import { Plus, CheckCircle2, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { PlanCard } from '@/app/(dashboard)/subscriptions/_components/PlanCard';
-import { mockSubscriptionPlans } from '@/lib/mock/subscriptions';
+import { SubscriptionPlan } from '@/types';
 
 export default function PlansPage() {
+  const dispatch = useAppDispatch();
+  const { subscriptions, loading } = useAppSelector((state) => state.subscription);
+  
   const [activeTab, setActiveTab] = useState<'published' | 'draft' | 'archived'>('published');
   const [search, setSearch] = useState('');
 
-  const filteredPlans = mockSubscriptionPlans.filter(plan => {
+  useEffect(() => {
+    dispatch(fetchSubscriptions());
+  }, [dispatch]);
+
+  // Map backend Subscription data to the frontend SubscriptionPlan type for PlanCard
+  const mappedPlans: SubscriptionPlan[] = subscriptions.map((sub) => ({
+    id: sub.id,
+    name: sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1),
+    slug: sub.plan as any,
+    description: `Configured for ${sub.max_team_members || 'unlimited'} users and ${sub.max_branches || 'unlimited'} branches.`,
+    industry: 'all',
+    planType: sub.plan === 'enterprise' ? 'enterprise' : sub.amount > 0 ? 'paid' : 'free',
+    billingCycle: sub.billing_cycle as any,
+    currency: sub.currency as any,
+    pricing: {
+      monthly: parseFloat(sub.amount),
+      yearly: parseFloat(sub.amount) * 12 * 0.8, // Assuming 20% discount on yearly
+    },
+    limits: {
+      branches: sub.max_branches || -1,
+      employees: sub.max_team_members || -1,
+      products: -1,
+      customers: -1,
+      monthlyOrders: -1,
+      posDevices: -1,
+      suppliers: -1,
+      purchaseOrders: -1,
+      apiCalls: -1,
+      storageLimitGB: -1,
+    },
+    modules: {
+      pos: true,
+      inventory: true,
+      purchase: true,
+      suppliers: true,
+      customers: true,
+      crm: true,
+      hr: false,
+      restaurant: false,
+      loyalty: false,
+      accounting: false,
+      analytics: sub.plan === 'enterprise' || sub.plan === 'professional',
+      apiAccess: sub.plan === 'enterprise' || sub.plan === 'professional',
+    },
+    features: {
+      offlinePos: true,
+      barcode: true,
+      advancedReports: sub.plan === 'enterprise' || sub.plan === 'professional',
+      whatsappReceipt: true,
+      customBranding: sub.plan === 'enterprise',
+      webhooks: sub.plan === 'enterprise' || sub.plan === 'professional',
+    },
+    trialDays: 14,
+    isPopular: sub.plan === 'professional' || sub.plan === 'growth',
+    isActive: sub.status === 'active' || sub.status === 'trialing',
+  }));
+
+  const filteredPlans = mappedPlans.filter(plan => {
     if (search && !plan.name.toLowerCase().includes(search.toLowerCase())) return false;
     
     // In a real app, we'd have a status field. For mock, we'll just show all in published.

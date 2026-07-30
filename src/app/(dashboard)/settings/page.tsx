@@ -2,31 +2,27 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useState } from "react";
-import { SettingsOverview } from "@/app/(dashboard)/settings/_components/SettingsOverview";
 import { GeneralSettings } from "@/app/(dashboard)/settings/_components/GeneralSettings";
 import { BrandingSettings } from "@/app/(dashboard)/settings/_components/BrandingSettings";
+import { EmailSettings } from "@/app/(dashboard)/settings/_components/EmailSettings";
+import { SMSSettings } from "@/app/(dashboard)/settings/_components/SMSSettings";
+import { MaintenanceSettings } from "@/app/(dashboard)/settings/_components/MaintenanceSettings";
+import { InvoiceSettings } from "@/app/(dashboard)/settings/_components/InvoiceSettings";
 import { UnderConstruction } from "@/components/ui/UnderConstruction";
 import {
-  LayoutDashboard,
   Settings,
   Palette,
-  ShieldCheck,
-  Globe,
   Mail,
   Smartphone,
-  CreditCard,
-  Database,
-  Cloud,
   Wrench,
-  AlertTriangle,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SettingTab =
-  | "overview"
   | "general"
   | "branding"
-  | "localization"
+  | "invoice"
   | "security"
   | "auth"
   | "email"
@@ -37,16 +33,22 @@ type SettingTab =
   | "maintenance";
 
 export default function SystemSettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingTab>("overview");
+  const [activeTab, setActiveTab] = useState<SettingTab>("general");
 
   const renderContent = () => {
     switch (activeTab) {
-      case "overview":
-        return <SettingsOverview />;
       case "general":
         return <GeneralSettings />;
       case "branding":
         return <BrandingSettings />;
+      case "invoice":
+        return <InvoiceSettings />;
+      case "email":
+        return <EmailSettings />;
+      case "sms":
+        return <SMSSettings />;
+      case "maintenance":
+        return <MaintenanceSettings />;
       default:
         return (
           <UnderConstruction
@@ -71,13 +73,6 @@ export default function SystemSettingsPage() {
         </div>
 
         <nav className="flex flex-col gap-1 pr-4 md:pr-0 border-r border-brand-border md:border-transparent h-full">
-          <SettingsNavLink
-            label="Overview"
-            icon={<LayoutDashboard className="h-4 w-4" />}
-            active={activeTab === "overview"}
-            onClick={() => setActiveTab("overview")}
-          />
-
           <NavSectionTitle title="Configuration" />
           <SettingsNavLink
             label="General Settings"
@@ -86,26 +81,18 @@ export default function SystemSettingsPage() {
             onClick={() => setActiveTab("general")}
           />
           <SettingsNavLink
-            label="Branding & UI"
+            label="Branding"
             icon={<Palette className="h-4 w-4" />}
             active={activeTab === "branding"}
             onClick={() => setActiveTab("branding")}
           />
-          <SettingsNavLink
-            label="Localization"
-            icon={<Globe className="h-4 w-4" />}
-            active={activeTab === "localization"}
-            onClick={() => setActiveTab("localization")}
-          />
 
-          <NavSectionTitle title="Security & Access" />
           <SettingsNavLink
-            label="Security Policies"
-            icon={<AlertTriangle className="h-4 w-4" />}
-            active={activeTab === "security"}
-            onClick={() => setActiveTab("security")}
+            label="Invoice Details"
+            icon={<FileText className="h-4 w-4" />}
+            active={activeTab === "invoice"}
+            onClick={() => setActiveTab("invoice")}
           />
-
           <NavSectionTitle title="Integrations" />
           <SettingsNavLink
             label="Email (SMTP)"
@@ -121,18 +108,6 @@ export default function SystemSettingsPage() {
           />
 
           <NavSectionTitle title="Infrastructure" />
-          <SettingsNavLink
-            label="Storage (S3)"
-            icon={<Cloud className="h-4 w-4" />}
-            active={activeTab === "storage"}
-            onClick={() => setActiveTab("storage")}
-          />
-          <SettingsNavLink
-            label="Backups"
-            icon={<Database className="h-4 w-4" />}
-            active={activeTab === "backup"}
-            onClick={() => setActiveTab("backup")}
-          />
           <SettingsNavLink
             label="Maintenance Mode"
             icon={<Wrench className="h-4 w-4" />}

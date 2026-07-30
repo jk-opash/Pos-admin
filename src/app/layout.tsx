@@ -7,6 +7,8 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
+import StoreProvider from "@/components/providers/StoreProvider";
+
 export const metadata: Metadata = {
   title: "POS Platform Admin",
   description: "Universal Business Management Platform",
@@ -18,11 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${outfit.variable} font-sans antialiased bg-brand-bg text-brand-dark`}
+        suppressHydrationWarning
       >
-        {children}
+        <StoreProvider>{children}</StoreProvider>
       </body>
     </html>
   );

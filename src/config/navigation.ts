@@ -20,6 +20,6 @@ export const navItems = [
   { href: '/payments', label: 'Payments', icon: Receipt },
   { href: '/analytics/revenue', label: 'Revenue Analytics', icon: TrendingUp },
   { href: '/audit-logs', label: 'Audit Logs', icon: ActivitySquare },
-  { href: '/feature-flags', label: 'Feature Flags', icon: ToggleLeft },
+  // { href: '/feature-flags', label: 'Feature Flags', icon: ToggleLeft },
   { href: '/support', label: 'Support Tickets', icon: LifeBuoy },
 ];

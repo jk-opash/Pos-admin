@@ -7,9 +7,10 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Business, BusinessStatus, BusinessType, SubscriptionPlanSlug } from '@/types';
-import { MoreVertical, ExternalLink } from 'lucide-react';
+import { MoreVertical, ExternalLink, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
+import { EditBusinessModal } from './EditBusinessModal';
 
 interface BusinessTableProps {
   data: Business[];
@@ -20,6 +21,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Search } from 'lucide-react';
 
 export function BusinessTable({ data, onStatusChange }: BusinessTableProps) {
+  const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
+
   if (!data.length) {
     return <EmptyState icon={<Search />} title="No Businesses" message="No businesses found matching your criteria." className="h-64" />;
   }
@@ -92,13 +95,18 @@ export function BusinessTable({ data, onStatusChange }: BusinessTableProps) {
                       View
                     </Button>
                   </Link>
-                  <ActionMenu biz={biz} onStatusChange={onStatusChange} />
+                  <ActionMenu biz={biz} onStatusChange={onStatusChange} onEdit={() => setEditingBusiness(biz)} />
                 </div>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      <EditBusinessModal 
+        isOpen={!!editingBusiness}
+        onClose={() => setEditingBusiness(null)}
+        initialBusiness={editingBusiness}
+      />
     </div>
   );
 }
@@ -133,7 +141,7 @@ function PlanBadge({ plan }: { plan: SubscriptionPlanSlug }) {
   }
 }
 
-function ActionMenu({ biz, onStatusChange }: { biz: Business, onStatusChange?: (id: string, newStatus: BusinessStatus) => void }) {
+function ActionMenu({ biz, onStatusChange, onEdit }: { biz: Business, onStatusChange?: (id: string, newStatus: BusinessStatus) => void, onEdit: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -159,6 +167,15 @@ function ActionMenu({ biz, onStatusChange }: { biz: Business, onStatusChange?: (
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-float border border-brand-border focus:outline-none z-modal">
           <div className="py-1">
+            <button
+              onClick={() => {
+                onEdit();
+                setIsOpen(false);
+              }}
+              className="block w-full px-4 py-2 text-left text-sm text-brand-dark hover:bg-slate-100"
+            >
+              Edit Details
+            </button>
             <button
               onClick={() => {
                 onStatusChange?.(biz.id, 'active');

@@ -56,8 +56,7 @@ export default function NewPlanPage() {
             <a href="#basic-info" className="block px-3 py-2 text-sm font-semibold text-brand-primary bg-brand-primaryLight rounded-lg">Basic Information</a>
             <a href="#pricing" className="block px-3 py-2 text-sm font-medium text-brand-muted hover:text-brand-dark hover:bg-slate-100 rounded-lg">Pricing & Billing</a>
             <a href="#limits" className="block px-3 py-2 text-sm font-medium text-brand-muted hover:text-brand-dark hover:bg-slate-100 rounded-lg">Resource Limits</a>
-            <a href="#modules" className="block px-3 py-2 text-sm font-medium text-brand-muted hover:text-brand-dark hover:bg-slate-100 rounded-lg">Module Access</a>
-            <a href="#features" className="block px-3 py-2 text-sm font-medium text-brand-muted hover:text-brand-dark hover:bg-slate-100 rounded-lg">Advanced Features</a>
+            <a href="#renewal" className="block px-3 py-2 text-sm font-medium text-brand-muted hover:text-brand-dark hover:bg-slate-100 rounded-lg">Renewal Settings</a>
           </div>
         </div>
 
@@ -71,41 +70,12 @@ export default function NewPlanPage() {
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Plan Name *" placeholder="e.g. Professional Plus" />
-                <Select label="Industry *" options={[
-                  { label: 'Universal (All)', value: 'Universal' },
-                  { label: 'Restaurant & F&B', value: 'Restaurant' },
-                  { label: 'Retail & Grocery', value: 'Retail' },
-                  { label: 'Pharmacy', value: 'Pharmacy' },
-                  { label: 'Salon & Spa', value: 'Salon' }
+                <Input label="Plan Name *" name="plan" placeholder="e.g. Professional" />
+                <Select label="Status *" name="status" options={[
+                  { label: 'Active', value: 'active' },
+                  { label: 'Trialing', value: 'trialing' },
+                  { label: 'Draft', value: 'draft' },
                 ]} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select label="Plan Type *" options={[
-                  { label: 'Paid Subscription', value: 'paid' },
-                  { label: 'Free Trial', value: 'trial' },
-                  { label: 'Completely Free', value: 'free' },
-                  { label: 'Enterprise (Custom Pricing)', value: 'enterprise' }
-                ]} />
-                <Select label="Status *" options={[
-                  { label: 'Active (Visible)', value: 'active' },
-                  { label: 'Draft (Hidden)', value: 'draft' },
-                ]} />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-brand-muted mb-1.5 block">Description</label>
-                <textarea
-                  className="w-full rounded-lg border border-brand-border px-3 py-2.5 text-sm text-brand-dark focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
-                  rows={2}
-                  placeholder="Brief description of who this plan is for..."
-                />
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-brand-light rounded-lg border border-brand-border">
-                <input type="checkbox" id="popular" className="h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary" />
-                <div>
-                  <label htmlFor="popular" className="text-sm font-medium text-brand-dark">Mark as &quot;Most Popular&quot;</label>
-                  <p className="text-xs text-brand-muted">Highlights this plan with a badge on the pricing page.</p>
-                </div>
               </div>
             </div>
           </div>
@@ -116,32 +86,20 @@ export default function NewPlanPage() {
               <h2 className="font-bold text-brand-dark">Pricing & Billing</h2>
             </div>
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select label="Default Currency *" options={[
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select label="Currency *" name="currency" options={[
                   { label: 'INR (₹)', value: 'INR' },
                   { label: 'USD ($)', value: 'USD' },
-                  { label: 'AED (د.إ)', value: 'AED' }
+                  { label: 'AED (د.إ)', value: 'AED' },
+                  { label: 'EUR (€)', value: 'EUR' },
+                  { label: 'GBP (£)', value: 'GBP' }
                 ]} />
-                <Select label="Allowed Billing Cycles *" options={[
-                  { label: 'Monthly & Yearly', value: 'both' },
-                  { label: 'Monthly Only', value: 'monthly' },
-                  { label: 'Yearly Only', value: 'yearly' },
-                  { label: 'Lifetime', value: 'lifetime' }
+                <Select label="Billing Cycle *" name="billing_cycle" options={[
+                  { label: 'Monthly', value: 'monthly' },
+                  { label: 'Quarterly', value: 'quarterly' },
+                  { label: 'Yearly', value: 'yearly' }
                 ]} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Monthly Price *" type="number" placeholder="0" />
-                <Input label="Yearly Price *" type="number" placeholder="0" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Free Trial Days" type="number" placeholder="0" defaultValue="14" />
-                <Input label="Setup Fee (Optional)" type="number" placeholder="0" />
-              </div>
-              <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 flex items-start gap-3 mt-2">
-                <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                <div className="text-sm text-amber-800">
-                  <strong>Enterprise Plan Pricing:</strong> For &quot;Enterprise&quot; or &quot;Custom&quot; plan types, pricing is automatically handled via manual invoices and quotes. The values entered above will be hidden from the public pricing page and display as &quot;Custom&quot;.
-                </div>
+                <Input label="Amount / Price *" name="amount" type="number" placeholder="0.00" />
               </div>
             </div>
           </div>
@@ -150,77 +108,37 @@ export default function NewPlanPage() {
           <div id="limits" className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6">
             <div className="px-6 py-4 border-b border-brand-border bg-brand-light flex justify-between items-center">
               <h2 className="font-bold text-brand-dark">Resource Limits</h2>
-              <Badge variant="muted">Use -1 for Unlimited</Badge>
+              <Badge variant="muted">Use 0 for None</Badge>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <Input label="Max Branches" type="number" defaultValue="1" />
-                <Input label="Max Employees / Users" type="number" defaultValue="5" />
-                <Input label="Max POS Devices" type="number" defaultValue="2" />
-                <Input label="Max Products / Items" type="number" defaultValue="1000" />
-                <Input label="Max Customers" type="number" defaultValue="500" />
-                <Input label="Max Suppliers" type="number" defaultValue="50" />
-                <Input label="Max Monthly Orders/Invoices" type="number" defaultValue="1000" />
-                <Input label="Max Storage (GB)" type="number" defaultValue="1" />
-                <Input label="Max API Calls / Month" type="number" defaultValue="0" />
-                <Input label="Max Purchase Orders" type="number" defaultValue="100" />
+                <Input label="Max Branches" name="max_branches" type="number" defaultValue="1" />
+                <Input label="Max Employees / Users" name="max_team_members" type="number" defaultValue="5" />
               </div>
             </div>
           </div>
 
-          {/* Section: Module Access */}
-          <div id="modules" className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6">
+          {/* Section: Renewal Settings */}
+          <div id="renewal" className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6">
             <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
-              <h2 className="font-bold text-brand-dark">Module Access (Enable / Disable)</h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { id: 'm_pos', label: 'Point of Sale (POS)' },
-                  { id: 'm_inv', label: 'Inventory Management' },
-                  { id: 'm_pur', label: 'Purchase Management' },
-                  { id: 'm_sup', label: 'Supplier Management' },
-                  { id: 'm_cust', label: 'Customer Management' },
-                  { id: 'm_crm', label: 'CRM & Marketing' },
-                  { id: 'm_hr', label: 'HR & Payroll' },
-                  { id: 'm_rest', label: 'Restaurant & Kitchen' },
-                  { id: 'm_loy', label: 'Loyalty Program' },
-                  { id: 'm_acc', label: 'Accounting' },
-                  { id: 'm_ana', label: 'Advanced Analytics' },
-                  { id: 'm_api', label: 'Developer API Access' },
-                ].map(mod => (
-                  <label key={mod.id} className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
-                    <input type="checkbox" defaultChecked={['m_pos', 'm_inv', 'm_cust'].includes(mod.id)} className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary" />
-                    <span className="text-sm font-medium text-brand-dark">{mod.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Section: Advanced Features */}
-          <div id="features" className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6">
-            <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
-              <h2 className="font-bold text-brand-dark">Advanced Features</h2>
+              <h2 className="font-bold text-brand-dark">Renewal Settings</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { id: 'f_off', label: 'Offline POS Mode', desc: 'Allow billing without internet' },
-                  { id: 'f_bar', label: 'Barcode Generation & Scanning', desc: 'Create and scan custom product barcodes' },
-                  { id: 'f_rep', label: 'Advanced Custom Reports', desc: 'Export and build custom data reports' },
-                  { id: 'f_wa', label: 'WhatsApp Receipts', desc: 'Send digital receipts via WhatsApp' },
-                  { id: 'f_cst', label: 'Custom Branding / White-label', desc: 'Remove platform branding from invoices' },
-                  { id: 'f_wh', label: 'Webhooks', desc: 'Real-time event streaming for devs' },
-                ].map(feat => (
-                  <label key={feat.id} className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
-                    <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary" />
-                    <div>
-                      <span className="text-sm font-medium text-brand-dark block">{feat.label}</span>
-                      <span className="text-xs text-brand-muted">{feat.desc}</span>
-                    </div>
-                  </label>
-                ))}
+                <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
+                  <input type="checkbox" name="auto_renew" className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary" />
+                  <div>
+                    <span className="text-sm font-medium text-brand-dark block">Auto Renew</span>
+                    <span className="text-xs text-brand-muted">Automatically renew plan at period end</span>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
+                  <input type="checkbox" name="cancel_at_period_end" className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary" />
+                  <div>
+                    <span className="text-sm font-medium text-brand-dark block">Cancel at Period End</span>
+                    <span className="text-xs text-brand-muted">Terminate subscription when cycle ends</span>
+                  </div>
+                </label>
               </div>
             </div>
           </div>

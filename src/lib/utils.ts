@@ -32,14 +32,19 @@ export function formatDate(
     year: "numeric",
   }
 ): string {
-  return new Intl.DateTimeFormat("en-IN", options).format(
-    typeof date === "string" ? new Date(date) : date
-  );
+  if (!date || date === "N/A") return "N/A";
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(d.getTime())) return String(date);
+  
+  return new Intl.DateTimeFormat("en-IN", options).format(d);
 }
 
 /** Format a date as relative time (e.g. "2 hours ago") */
 export function formatRelativeTime(date: string | Date): string {
+  if (!date || date === "N/A") return "N/A";
   const d = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(d.getTime())) return String(date);
+  
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffSec = Math.floor(diffMs / 1000);

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { mockBusinesses } from "@/lib/mock/businesses";
 import { BusinessTable } from "@/app/(dashboard)/businesses/_components/BusinessTable";
 import { BusinessFilters } from "@/app/(dashboard)/businesses/_components/BusinessFilters";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { Pagination } from "@/components/ui/Pagination";
 import { Store, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchBusinesses } from "@/store/slices/businessSlice";
+import type { Business, BusinessStatus, SubscriptionPlanSlug } from "@/types";
 
 export default function BusinessesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,6 +19,68 @@ export default function BusinessesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  const dispatch = useAppDispatch();
+  const { businesses, loading } = useAppSelector((state) => state.business);
+
+  useEffect(() => {
+    dispatch(fetchBusinesses());
+  }, [dispatch]);
+
+  // Map API response to Business type expected by the table
+  const apiBusinesses: Business[] = businesses.map((req) => {
+    let mappedStatus: BusinessStatus = "active";
+    if (req.status === "suspended") mappedStatus = "suspended";
+    else if (req.status === "deleted") mappedStatus = "deleted";
+    else if (req.status === "pending") mappedStatus = "pending";
+    else if (req.status === "trial") mappedStatus = "trial";
+
+    return {
+      id: req.id,
+      name: req.name,
+      slug: req.slug,
+      type: req.business_type,
+      status: mappedStatus,
+      owner: {
+        name: req.admin?.name || "N/A",
+        email: req.admin?.email || req.email || "N/A",
+        phone: req.admin?.phone || req.phone || "N/A",
+      },
+      address: {
+        city: req.city || "N/A",
+        state: req.state || "N/A",
+        country: req.country || "N/A",
+        pincode: req.pincode || "N/A",
+      },
+      subscription: req.subscription_plan
+        ? {
+            plan: req.subscription_plan.plan as SubscriptionPlanSlug,
+            status: req.subscription_plan.status,
+            endsAt: req.subscription_plan.updated_at,
+            autoRenew: req.subscription_plan.auto_renew,
+            maxBranches: req.subscription_plan.max_branches,
+            maxUsers: req.subscription_plan.max_team_members,
+          }
+        : {
+            plan: "free_trial",
+            status: "active",
+            endsAt: "N/A",
+            autoRenew: false,
+            maxBranches: 5,
+            maxUsers: 50,
+          },
+      stats: {
+        branches: req.branches?.length ?? 0,
+        users: req.teamMembers?.length ?? 0,
+        totalOrders: 0,
+        revenueMTD: 0,
+        revenueTotal: 0,
+      },
+      kyc: { status: "pending" },
+      createdAt: req.created_at || new Date().toISOString(),
+      updatedAt: req.updated_at || new Date().toISOString(),
+    };
+  });
+
   // Reset to first page when filters change
   useEffect(() => {
     const timeout = setTimeout(() => setCurrentPage(1), 0);
@@ -24,7 +88,7 @@ export default function BusinessesPage() {
   }, [searchTerm, statusFilter, typeFilter, planFilter, stateFilter]);
 
   // Client-side filtering
-  const filteredBusinesses = mockBusinesses.filter((biz) => {
+  const filteredBusinesses = apiBusinesses.filter((biz) => {
     // Search match
     const matchesSearch =
       biz.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,17 +123,17 @@ export default function BusinessesPage() {
   const totalPages = Math.ceil(filteredBusinesses.length / itemsPerPage);
   const paginatedBusinesses = filteredBusinesses.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
-  const totalBusinesses = mockBusinesses.length;
-  const activeBusinesses = mockBusinesses.filter(
+  const totalBusinesses = apiBusinesses.length;
+  const activeBusinesses = apiBusinesses.filter(
     (b) => b.status === "active",
   ).length;
-  const trialBusinesses = mockBusinesses.filter(
+  const trialBusinesses = apiBusinesses.filter(
     (b) => b.status === "trial",
   ).length;
-  const pendingBusinesses = mockBusinesses.filter(
+  const pendingBusinesses = apiBusinesses.filter(
     (b) => b.status === "pending",
   ).length;
 

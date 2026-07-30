@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 import { StepPersonalInfo } from "./StepPersonalInfo";
 import { StepBusinessDetails } from "./StepBusinessDetails";
 import { StepIndustryTemplate } from "./StepIndustryTemplate";
@@ -11,140 +10,162 @@ import { StepTaxCompliance } from "./StepTaxCompliance";
 import { StepSubscription } from "./StepSubscription";
 import { StepPayment } from "./StepPayment";
 import { StepReview } from "./StepReview";
-import { Check, ChevronLeft, ChevronRight, Save, Play } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Sparkles,
+  Store,
+} from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { provisionBusiness } from "@/store/slices/businessSlice";
 
 const STEPS = [
-  "Personal Info",
-  "Business Details",
-  "Industry",
-  "Address",
-  "Tax & Compliance",
-  "Subscription",
-  "Payment",
-  "Review",
+  { id: 1, title: "Personal Info", desc: "Your details" },
+  { id: 2, title: "Business Details", desc: "Core info" },
+  { id: 3, title: "Industry", desc: "Type & template" },
+  { id: 4, title: "Address", desc: "Location info" },
+  { id: 5, title: "Compliance", desc: "Tax & docs" },
+  { id: 6, title: "Subscription", desc: "Choose plan" },
+  { id: 7, title: "Payment", desc: "Billing details" },
+  { id: 8, title: "Review", desc: "Verify & submit" },
 ];
 
 export function OnboardingWizardFull() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { onboardingForm, loading: isProvisioning } = useAppSelector(
+    (state: any) => state.business,
+  );
+
   const [currentStep, setCurrentStep] = useState(0);
-  const [isProvisioning, setIsProvisioning] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Smooth transition effect between steps
+  const changeStep = (newStep: number) => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentStep(newStep);
+      setIsAnimating(false);
+    }, 300);
+  };
 
   const handleNext = () => {
-    if (currentStep < STEPS.length - 1) {
-      setCurrentStep((p) => p + 1);
-      window.scrollTo(0, 0);
-    }
+    if (currentStep < STEPS.length - 1) changeStep(currentStep + 1);
   };
 
   const handlePrev = () => {
-    if (currentStep > 0) {
-      setCurrentStep((p) => p - 1);
-      window.scrollTo(0, 0);
+    if (currentStep > 0) changeStep(currentStep - 1);
+  };
+
+  const handleProvision = async () => {
+    try {
+      await dispatch(provisionBusiness(onboardingForm)).unwrap();
+      router.push("/onboarding");
+    } catch (err) {
+      console.error("Provisioning failed:", err);
     }
   };
 
-  const handleProvision = () => {
-    setIsProvisioning(true);
-    setTimeout(() => {
-      router.push("/businesses");
-    }, 2000);
-  };
+  const progressPercentage = ((currentStep + 1) / STEPS.length) * 100;
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] pb-12">
-      {/* Background Decorators for Glassmorphism */}
-      <div className="absolute top-0 -left-1/4 w-[600px] h-[600px] bg-brand-primary/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 pointer-events-none z-0"></div>
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-400/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 pointer-events-none z-0"></div>
+    <div className="h-[calc(100vh-12rem)] min-h-[600px] font-sans selection:bg-brand-primary/20 flex flex-col relative overflow-hidden">
+      {/* --- Main Content Area --- */}
+      <main className="flex-1 flex flex-col items-center pb-4 md:pb-6 lg:pb-8 pb-4 md:pb-6 lg:pb-8 z-10 relative overflow-hidden">
+        {/* Top Segmented Progress Bar */}
+        <div className="w-full max-w-4xl mb-6 shrink-0">
+          <div className="flex items-center gap-2 w-full">
+            {STEPS.map((step, idx) => {
+              const isCompleted = idx < currentStep;
+              const isActive = idx === currentStep;
 
-      <div className="relative z-10  mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-brand-dark tracking-tight">
-              New Business Onboarding
-            </h1>
-            <p className="mt-2 text-base text-brand-muted max-w-xl leading-relaxed">
-              Complete all steps to register and provision a new tenant.
-            </p>
+              return (
+                <div key={step.id} className="flex-1 group relative">
+                  <div className="h-1.5 w-full rounded-full overflow-hidden bg-slate-200/60">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ease-out ${
+                        isCompleted
+                          ? "bg-emerald-500 w-full"
+                          : isActive
+                            ? "bg-brand-primary w-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                            : "w-0"
+                      }`}
+                    />
+                  </div>
+                  {/* Tooltip on hover */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    <div className="bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap shadow-xl">
+                      {step.title}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <Button
-            variant="outline"
-            className="gap-2 bg-white/60 backdrop-blur-md shadow-sm border-slate-200/60 hover:bg-white transition-all rounded-xl"
-            onClick={() => router.push("/onboarding")}
-          >
-            <Save className="h-4 w-4" /> Save as Draft
-          </Button>
+
+          <div className="flex justify-between items-center mt-2 px-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-brand-primary">
+              Step {currentStep + 1} of {STEPS.length}
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              {Math.round(progressPercentage)}% Completed
+            </span>
+          </div>
         </div>
 
-        {/* Main Glass Container */}
-        <div className="rounded-3xl border border-white/60 bg-glass-gradient backdrop-blur-xl shadow-glass overflow-hidden flex flex-col lg:flex-row min-h-[700px]">
-          {/* Progress Sidebar */}
-          <div className="w-full lg:w-72 shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200/50 bg-white/40 p-6 md:p-8">
-            <div className="sticky top-8">
-              <h3 className="text-xs font-bold text-brand-placeholder uppercase tracking-wider mb-6">
-                Onboarding Steps
-              </h3>
-              <div className="space-y-4">
-                {STEPS.map((step, idx) => {
-                  const isActive = idx === currentStep;
-                  const isPast = idx < currentStep;
-                  return (
-                    <div key={step} className="flex items-center gap-4">
-                      <div
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 shadow-sm ${
-                          isActive
-                            ? "bg-gradient-to-br from-brand-primary to-brand-primaryDark text-white ring-4 ring-brand-primary/20 shadow-brand-primary/30"
-                            : isPast
-                              ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/20"
-                              : "bg-white border border-slate-200/60 text-slate-400"
-                        }`}
-                      >
-                        {isPast ? <Check className="h-4 w-4" /> : idx + 1}
-                      </div>
-                      <div>
-                        <p
-                          className={`text-sm font-semibold transition-colors ${
-                            isActive
-                              ? "text-brand-dark"
-                              : isPast
-                                ? "text-emerald-600"
-                                : "text-brand-placeholder"
-                          }`}
-                        >
-                          {step}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+        {/* Form & Navigation Carousel Layout */}
+        <div className="w-full max-w-7xl flex flex-1 flex-row items-center gap-4 lg:gap-8 h-full min-h-0">
+          {/* Left: Back Button */}
+          <div className="w-16 lg:w-24 shrink-0 flex justify-end">
+            <button
+              onClick={handlePrev}
+              disabled={currentStep === 0 || isProvisioning}
+              className={`group flex flex-col items-center justify-center gap-2 transition-all ${
+                currentStep === 0
+                  ? "opacity-0 pointer-events-none"
+                  : "opacity-100"
+              }`}
+            >
+              <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white/60 backdrop-blur-md shadow-[0_8px_30px_-10px_rgba(0,0,0,0.15)] border border-white/60 group-hover:bg-white group-hover:scale-110 transition-all">
+                <ChevronLeft className="h-6 w-6 text-slate-600 group-hover:text-slate-900 group-hover:-translate-x-0.5 transition-transform" />
               </div>
-
-              {/* Completion Widget */}
-              <div className="mt-40">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
-                  Completion
-                </p>
-                <div className="flex justify-between items-end mb-3">
-                  <span className="text-3xl font-black text-brand-dark tracking-tight">
-                    {Math.round((currentStep / (STEPS.length - 1)) * 100)}%
-                  </span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/50 shadow-inner">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-primary to-purple-500 transition-all duration-500 ease-out"
-                    style={{
-                      width: `${(currentStep / (STEPS.length - 1)) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+              <span className="text-[11px] font-bold text-slate-500 group-hover:text-slate-900 hidden sm:block">
+                Back
+              </span>
+            </button>
           </div>
 
-          {/* Content Area */}
-          <div className="flex-1 flex flex-col relative bg-white/50">
-            {/* Step Content */}
-            <div className="flex-1 p-6 md:p-10 pb-28 lg:pb-32 overflow-y-auto">
+          {/* Center: Main Form Card */}
+          <div
+            className={`flex-1 flex flex-col h-full min-h-0 bg-white/80 backdrop-blur-2xl border border-white/80 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] rounded-[2rem] p-4 lg:p-6 transition-all duration-500 transform ${
+              isAnimating
+                ? "opacity-0 scale-[0.98] translate-y-2"
+                : "opacity-100 scale-100 translate-y-0"
+            }`}
+          >
+            {/* Header inside card */}
+            <div className="mb-4 shrink-0">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/20 mb-1">
+                <Sparkles className="h-3 w-3 text-brand-primary" />
+                <span className="text-[10px] font-bold text-brand-primary uppercase tracking-wider">
+                  {STEPS[currentStep].title}
+                </span>
+              </div>
+              <h1 className="text-xl lg:text-xl font-black text-slate-900 tracking-tight leading-tight">
+                {currentStep === 0 && "Let's start with your details."}
+                {currentStep === 1 && "Tell us about your business."}
+                {currentStep === 2 && "What industry are you in?"}
+                {currentStep === 3 && "Where are you located?"}
+                {currentStep === 4 && "Tax & legal compliance."}
+                {currentStep === 5 && "Choose your perfect plan."}
+                {currentStep === 6 && "How would you like to pay?"}
+                {currentStep === 7 && "Review and finalize."}
+              </h1>
+            </div>
+
+            {/* Scrollable area */}
+            <div className="flex-1 overflow-y-auto pr-3 -mr-3 custom-scrollbar">
               {currentStep === 0 && <StepPersonalInfo />}
               {currentStep === 1 && <StepBusinessDetails />}
               {currentStep === 2 && <StepIndustryTemplate />}
@@ -154,49 +175,45 @@ export function OnboardingWizardFull() {
               {currentStep === 6 && <StepPayment />}
               {currentStep === 7 && <StepReview />}
             </div>
+          </div>
 
-            {/* Navigation Footer */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:px-10 md:py-6 border-t border-slate-200/50 bg-white/70 backdrop-blur-xl flex items-center justify-between">
-              <Button
-                variant="outline"
-                className="gap-2 bg-white hover:bg-slate-50 rounded-xl"
-                onClick={handlePrev}
-                disabled={currentStep === 0 || isProvisioning}
+          {/* Right: Continue / Provision Button */}
+          <div className="w-16 lg:w-24 shrink-0 flex justify-start">
+            {currentStep < STEPS.length - 1 ? (
+              <button
+                onClick={handleNext}
+                className="group flex flex-col items-center justify-center gap-2 transition-all"
               >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </Button>
-
-              {currentStep < STEPS.length - 1 ? (
-                <Button
-                  className="gap-2 bg-brand-dark hover:bg-black text-white border-none rounded-xl px-6 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all"
-                  onClick={handleNext}
-                >
-                  <span className="font-bold">Next Step</span>{" "}
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  className="gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-none min-w-[200px] rounded-xl px-6 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all"
-                  onClick={handleProvision}
-                  disabled={isProvisioning}
+                <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-slate-900 text-white hover:bg-brand-primary shadow-[0_10px_40px_-10px_rgba(15,23,42,0.5)] group-hover:shadow-[0_10px_40px_-10px_rgba(59,130,246,0.5)] group-hover:scale-110 transition-all">
+                  <ChevronRight className="h-6 w-6 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-900 group-hover:text-brand-primary hidden sm:block">
+                  Next
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={handleProvision}
+                disabled={isProvisioning}
+                className="group flex flex-col items-center justify-center gap-2 transition-all"
+              >
+                <div
+                  className={`flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-white shadow-[0_10px_40px_-10px_rgba(16,185,129,0.5)] ${!isProvisioning && "group-hover:scale-110"} transition-all`}
                 >
                   {isProvisioning ? (
-                    <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      <span className="font-bold">Provisioning...</span>
-                    </>
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                   ) : (
-                    <>
-                      <Play className="h-4 w-4" />{" "}
-                      <span className="font-bold">Approve & Provision</span>
-                    </>
+                    <Check className="h-6 w-6" />
                   )}
-                </Button>
-              )}
-            </div>
+                </div>
+                <span className="text-[11px] font-bold text-emerald-600 text-center leading-tight hidden sm:block">
+                  {isProvisioning ? "Saving..." : "Approve"}
+                </span>
+              </button>
+            )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

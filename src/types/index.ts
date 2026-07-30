@@ -36,6 +36,8 @@ export interface Business {
   legalName?: string;
   description?: string;
   website?: string;
+  email?: string;
+  phone?: string;
   type: BusinessType;
   status: BusinessStatus;
   logo?: string;
@@ -60,6 +62,8 @@ export interface Business {
     status: SubscriptionStatus;
     endsAt: string;
     autoRenew: boolean;
+    maxBranches?: number;
+    maxUsers?: number;
   };
   stats: BusinessStats;
   kyc: {

@@ -42,7 +42,7 @@ export function PaymentTable({
         <TableHeader className="bg-brand-light">
           <TableRow>
             <TableHead>Transaction</TableHead>
-            <TableHead>Business ID</TableHead>
+            <TableHead>Business</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Method</TableHead>
@@ -63,8 +63,8 @@ export function PaymentTable({
                 </div>
               </TableCell>
 
-              <TableCell className="text-sm text-brand-dark">
-                {payment.businessId}
+              <TableCell className="text-sm font-medium text-brand-dark">
+                {payment.businessName || payment.businessId}
               </TableCell>
 
               <TableCell>

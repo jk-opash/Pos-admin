@@ -1,30 +1,142 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mockSubscriptions, mockInvoices } from '@/lib/mock/subscriptions';
-import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Search, FileText, Download, ArrowLeft, Eye } from 'lucide-react';
+import { Search, Download, ArrowLeft, Eye, Loader2 } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
-import { Subscription, Invoice } from '@/types';
+import { Invoice } from '@/types';
 import { Modal } from '@/components/ui/Modal';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchBusinesses } from '@/store/slices/businessSlice';
+import { fetchSubscriptions, fetchInvoices } from '@/store/slices/subscriptionSlice';
 
 export default function BillingPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const { businesses } = useAppSelector((state) => state.business);
+  const { subscriptions, invoices, loading } = useAppSelector((state) => state.subscription);
+
   const [activeTab, setActiveTab] = useState<'subscriptions' | 'invoices'>('subscriptions');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
-  const filteredSubs = mockSubscriptions.filter(
-    (sub) => sub.businessName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-             sub.id.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    let currentUrl: string | null = null;
+    
+    if (selectedInvoice) {
+      let isMounted = true;
+      const loadPreview = async () => {
+        setIsPreviewLoading(true);
+        try {
+          const res = await fetch('/api/invoice/pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(selectedInvoice),
+          });
+          if (res.ok) {
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            currentUrl = url;
+            if (isMounted) setPdfPreviewUrl(url);
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          if (isMounted) setIsPreviewLoading(false);
+        }
+      };
+      loadPreview();
+      
+      return () => {
+        isMounted = false;
+        if (currentUrl) window.URL.revokeObjectURL(currentUrl);
+      };
+    } else {
+      setPdfPreviewUrl(null);
+    }
+  }, [selectedInvoice]);
+
+  const downloadInvoicePDF = async (invoice: Invoice) => {
+    try {
+      setDownloadingInvoiceId(invoice.id);
+      const res = await fetch('/api/invoice/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(invoice),
+      });
+
+      if (!res.ok) throw new Error('Failed to generate PDF');
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Invoice-${invoice.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  };
+
+  useEffect(() => {
+    dispatch(fetchBusinesses());
+    dispatch(fetchSubscriptions());
+    dispatch(fetchInvoices());
+  }, [dispatch]);
+
+  // Map real business subscriptions from backend
+  const realSubscriptions = businesses.map((b: any) => {
+    const subPlan = b.subscription_plan;
+    return {
+      id: b.id,
+      businessName: b.name,
+      plan: subPlan?.plan || subPlan?.name || 'Free Trial',
+      status: subPlan?.status || b.status || 'active',
+      amount: subPlan?.amount ? Number(subPlan.amount) : 0,
+      billingCycle: subPlan?.billing_cycle || 'monthly',
+      currentPeriodEnd: subPlan?.updated_at || b.created_at || new Date().toISOString(),
+    };
+  });
+
+  const displaySubs = realSubscriptions.length > 0 ? realSubscriptions : mockSubscriptions;
+
+  // Map real invoices from backend
+  const realInvoices: Invoice[] = invoices.map((inv: any) => ({
+    id: inv.invoice_number || inv.id,
+    businessId: inv.business_id || inv.business?.id || 'N/A',
+    businessName: inv.business?.name || 'Business Tenant',
+    subscriptionId: inv.subscription_id || inv.subscription_plan_id || 'N/A',
+    amount: Number(inv.amount || 0),
+    status: (inv.status as any) || 'paid',
+    issuedAt: inv.issued_at || inv.created_at || new Date().toISOString(),
+    dueDate: inv.due_date || inv.created_at || new Date().toISOString(),
+    downloadUrl: inv.invoice_pdf_url || inv.downloadUrl || '#',
+  }));
+
+  const displayInvoices = realInvoices.length > 0 ? realInvoices : mockInvoices;
+
+  const filteredSubs = displaySubs.filter(
+    (sub) =>
+      sub.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sub.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredInvoices = mockInvoices.filter(
-    (inv) => inv.businessName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-             inv.id.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredInvoices = displayInvoices.filter(
+    (inv) =>
+      inv.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inv.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -59,7 +171,7 @@ export default function BillingPage() {
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
-              Active Subscriptions
+              Active Subscriptions ({displaySubs.length})
             </button>
             <button
               onClick={() => setActiveTab('invoices')}
@@ -69,7 +181,7 @@ export default function BillingPage() {
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
-              Invoices & History
+              Invoices & History ({displayInvoices.length})
             </button>
           </nav>
           <div className="relative w-full sm:w-64 group">
@@ -86,7 +198,11 @@ export default function BillingPage() {
 
         {/* Content */}
         <div className="overflow-x-auto">
-          {activeTab === 'subscriptions' ? (
+          {loading && (displaySubs.length === 0 && displayInvoices.length === 0) ? (
+            <div className="flex justify-center items-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+            </div>
+          ) : activeTab === 'subscriptions' ? (
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-brand-border bg-white">
@@ -153,8 +269,12 @@ export default function BillingPage() {
                         >
                           <Eye className="h-4 w-4" /> View
                         </button>
-                        <button className="inline-flex items-center gap-1 text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors">
-                          <Download className="h-4 w-4" /> PDF
+                        <button 
+                          onClick={() => downloadInvoicePDF(inv)}
+                          disabled={downloadingInvoiceId !== null}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors disabled:opacity-50"
+                        >
+                          {downloadingInvoiceId === inv.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} PDF
                         </button>
                       </div>
                     </td>
@@ -172,47 +292,38 @@ export default function BillingPage() {
       </div>
 
       {/* Invoice Details Modal */}
-      <Modal isOpen={!!selectedInvoice} onClose={() => setSelectedInvoice(null)} title="Invoice Details" size="xl">
+      <Modal isOpen={!!selectedInvoice} onClose={() => setSelectedInvoice(null)} title="Invoice Preview" size="4xl">
         {selectedInvoice && (
-          <div className="flex flex-col">
-            <div className="p-6 pb-0 flex justify-between items-start mb-6">
-              <div>
-                <h3 className="text-2xl font-bold text-brand-dark mb-1">{selectedInvoice.businessName}</h3>
-                <p className="text-sm font-mono text-brand-muted uppercase">INV-{selectedInvoice.id.split('-')[0]}</p>
-              </div>
-              <Badge variant={selectedInvoice.status === 'paid' ? 'success' : selectedInvoice.status === 'overdue' ? 'danger' : 'warning'} className="text-sm px-3 py-1">
-                {selectedInvoice.status}
-              </Badge>
-            </div>
-            
-            <div className="px-6 grid grid-cols-2 gap-6 mb-8">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-[10px] font-bold text-brand-muted uppercase tracking-widest mb-1.5">Date Issued</p>
-                <p className="text-sm font-semibold text-brand-dark">{formatDate(selectedInvoice.issuedAt)}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-[10px] font-bold text-brand-muted uppercase tracking-widest mb-1.5">Due Date</p>
-                <p className="text-sm font-semibold text-brand-dark">{formatDate(selectedInvoice.dueDate)}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-[10px] font-bold text-brand-muted uppercase tracking-widest mb-1.5">Subscription ID</p>
-                <p className="text-sm font-mono text-brand-dark">{selectedInvoice.subscriptionId}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-center">
-                <p className="text-[10px] font-bold text-brand-muted uppercase tracking-widest mb-1.5">Total Amount</p>
-                <p className="text-2xl font-bold text-brand-primary">{formatCurrency(selectedInvoice.amount, true)}</p>
-              </div>
+          <div className="flex flex-col h-[70vh] -mx-6 -mb-6 -mt-4 bg-slate-100/50 rounded-b-3xl overflow-hidden relative">
+            <div className="flex-1 w-full h-full relative">
+              {isPreviewLoading ? (
+                <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/50 backdrop-blur-sm z-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-brand-primary mb-2" />
+                  <p className="text-sm font-medium text-brand-muted">Generating PDF preview...</p>
+                </div>
+              ) : pdfPreviewUrl ? (
+                <iframe src={pdfPreviewUrl} className="w-full h-full border-0" title="Invoice PDF" />
+              ) : (
+                <div className="absolute inset-0 flex justify-center items-center bg-white">
+                  <p className="text-sm font-medium text-red-500">Failed to load PDF preview.</p>
+                </div>
+              )}
             </div>
 
-            <div className="p-6 border-t border-brand-border/50 bg-slate-50/50 flex justify-end gap-3 rounded-b-2xl">
+            <div className="p-4 border-t border-brand-border bg-white flex justify-end gap-3 shrink-0">
               <button 
                 onClick={() => setSelectedInvoice(null)}
-                className="px-6 py-2 rounded-xl border border-brand-border text-sm font-semibold text-brand-dark hover:bg-white transition-colors"
+                className="px-6 py-2 rounded-xl border border-brand-border text-sm font-semibold text-brand-dark hover:bg-slate-50 transition-colors"
               >
                 Close
               </button>
-              <button className="px-6 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold hover:bg-brand-primaryDark transition-all shadow-md flex items-center gap-2">
-                <Download className="h-4 w-4" /> Download PDF
+              <button 
+                onClick={() => downloadInvoicePDF(selectedInvoice)}
+                disabled={downloadingInvoiceId !== null || isPreviewLoading}
+                className="px-6 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold hover:bg-brand-primaryDark transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+              >
+                {downloadingInvoiceId === selectedInvoice.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} 
+                {downloadingInvoiceId === selectedInvoice.id ? 'Generating...' : 'Download PDF'}
               </button>
             </div>
           </div>

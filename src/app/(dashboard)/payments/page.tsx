@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PaymentTable } from '@/app/(dashboard)/payments/_components/PaymentTable';
 import { PaymentDetailsModal } from '@/app/(dashboard)/payments/_components/PaymentDetailsModal';
 import { AddPaymentModal } from '@/app/(dashboard)/payments/_components/AddPaymentModal';
-import { Payment } from '@/types';
+import { Payment, PaymentStatus } from '@/types';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { mockPayments } from '@/lib/mock/payments';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchInvoices } from '@/store/slices/subscriptionSlice';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>(mockPayments);
@@ -20,6 +22,41 @@ export default function PaymentsPage() {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const dispatch = useAppDispatch();
+  const { invoices, loading } = useAppSelector((state) => state.subscription);
+
+  useEffect(() => {
+    dispatch(fetchInvoices());
+  }, [dispatch]);
+
+  // Map API invoices to Payments array
+  useEffect(() => {
+    if (invoices && invoices.length > 0) {
+      const mappedPayments: Payment[] = invoices.map((inv: any) => {
+        let status: PaymentStatus = 'success';
+        if (inv.status === 'pending') status = 'pending';
+        else if (inv.status === 'overdue' || inv.status === 'failed') status = 'failed';
+
+        return {
+          id: inv.invoice_number || inv.id,
+          businessId: inv.business_id || 'N/A',
+          businessName: inv.business?.name || 'Business',
+          subscriptionId: inv.subscription_id || 'N/A',
+          amount: Number(inv.amount || 0),
+          gstAmount: Math.round(Number(inv.amount || 0) * 0.18),
+          totalAmount: Math.round(Number(inv.amount || 0) * 1.18),
+          currency: inv.currency || 'INR',
+          status,
+          paymentMethod: 'UPI / Card',
+          invoiceNumber: inv.invoice_number || `INV-${inv.id.slice(0, 8)}`,
+          paidAt: inv.paid_at || inv.issued_at || new Date().toISOString(),
+          createdAt: inv.created_at || new Date().toISOString(),
+        };
+      });
+      setPayments(mappedPayments);
+    }
+  }, [invoices]);
 
   const handleViewPayment = (payment: Payment) => {
     setSelectedPayment(payment);
@@ -33,6 +70,7 @@ export default function PaymentsPage() {
   const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
       payment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.businessId.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -61,7 +99,7 @@ export default function PaymentsPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="w-full sm:w-80">
           <Input
-            placeholder="Search by Transaction ID or Business ID..."
+            placeholder="Search by Transaction ID or Business Name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             icon={<Search className="h-4 w-4" />}

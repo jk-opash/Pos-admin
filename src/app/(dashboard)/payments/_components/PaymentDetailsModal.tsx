@@ -63,12 +63,9 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
           </div>
 
           <div>
-            <p className="text-xs text-brand-muted uppercase tracking-wider mb-1">Business ID</p>
+            <p className="text-xs text-brand-muted uppercase tracking-wider mb-1">Business Name</p>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-mono text-brand-dark">{payment.businessId}</span>
-              <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-transparent text-brand-muted hover:text-brand-primary">
-                <ExternalLink className="h-3 w-3" />
-              </Button>
+              <span className="text-sm font-semibold text-brand-dark">{payment.businessName || payment.businessId}</span>
             </div>
           </div>
 

@@ -2,14 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store/store';
+import { loginUser } from '@/store/slices/authSlice';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Eye, EyeOff, Zap, Mail, Lock, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@platform.in');
-  const [password, setPassword] = useState('admin123');
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const [email, setEmail] = useState('superadmin@possoftware.dev');
+  const [password, setPassword] = useState('password123');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,16 +24,14 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 800));
-
-    if (email && password.length >= 6) {
-      localStorage.setItem('admin_auth', JSON.stringify({ email, role: 'super_admin' }));
+    try {
+      await dispatch(loginUser({ email, password })).unwrap();
       router.push('/dashboard');
-    } else {
-      setError('Invalid credentials. Use any email with 6+ character password.');
+    } catch (err: any) {
+      setError(err || 'An error occurred during login');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

@@ -1,30 +1,50 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Plus, UserPlus } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { StatsCard } from '@/components/ui/StatsCard';
-import { OnboardingTable } from '@/app/(dashboard)/onboarding/_components/OnboardingTable';
-import { OnboardingAnalytics } from '@/app/(dashboard)/onboarding/_components/OnboardingAnalytics';
-import { mockOnboardingRequests } from '@/lib/mock/onboarding-requests';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Plus, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { StatsCard } from "@/components/ui/StatsCard";
+import { OnboardingTable } from "@/app/(dashboard)/onboarding/_components/OnboardingTable";
+import { OnboardingAnalytics } from "@/app/(dashboard)/onboarding/_components/OnboardingAnalytics";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchOnboardingRequests } from "@/store/slices/businessSlice";
 
 export default function OnboardingPage() {
-  const [activeTab, setActiveTab] = useState<'requests' | 'analytics'>('requests');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'pending' | 'completed'>('all');
+  const dispatch = useAppDispatch();
+  const { onboardingRequests, loading } = useAppSelector(
+    (state: any) => state.business,
+  );
+
+  const [activeTab, setActiveTab] = useState<"requests" | "analytics">(
+    "requests",
+  );
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "draft" | "pending" | "completed"
+  >("all");
+
+  useEffect(() => {
+    dispatch(fetchOnboardingRequests());
+  }, [dispatch]);
 
   const stats = {
-    total: mockOnboardingRequests.length,
-    drafts: mockOnboardingRequests.filter(r => r.status === 'draft').length,
-    pending: mockOnboardingRequests.filter(r => r.status === 'pending_review').length,
-    completed: mockOnboardingRequests.filter(r => r.status === 'completed' || r.status === 'approved').length,
+    total: onboardingRequests.length,
+    drafts: onboardingRequests.filter((r: any) => r.status === "draft").length,
+    pending: onboardingRequests.filter(
+      (r: any) => r.status === "pending_review" || r.status === "pending",
+    ).length,
+    completed: onboardingRequests.filter(
+      (r: any) => r.status === "completed" || r.status === "approved",
+    ).length,
   };
 
-  const filtered = mockOnboardingRequests.filter(req => {
-    if (statusFilter === 'all') return true;
-    if (statusFilter === 'draft') return req.status === 'draft';
-    if (statusFilter === 'pending') return req.status === 'pending_review';
-    if (statusFilter === 'completed') return req.status === 'completed' || req.status === 'approved';
+  const filtered = onboardingRequests.filter((req: any) => {
+    if (statusFilter === "all") return true;
+    if (statusFilter === "draft") return req.status === "draft";
+    if (statusFilter === "pending")
+      return req.status === "pending_review" || req.status === "pending";
+    if (statusFilter === "completed")
+      return req.status === "completed" || req.status === "approved";
     return true;
   });
 
@@ -33,9 +53,12 @@ export default function OnboardingPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-brand-dark">Business Onboarding</h1>
+          <h1 className="text-2xl font-bold text-brand-dark">
+            Business Onboarding
+          </h1>
           <p className="mt-1 text-sm text-brand-muted">
-            Track and manage new business registrations and manual provisioning requests.
+            Track and manage new business registrations and manual provisioning
+            requests.
           </p>
         </div>
         <Link href="/onboarding/new">
@@ -51,66 +74,74 @@ export default function OnboardingPage() {
           title="Total Requests"
           value={stats.total}
           icon={<UserPlus className="h-5 w-5" />}
-          trend={{ value: 12, label: 'this month', positive: true }}
+          trend={{ value: 12, label: "this month", positive: true }}
         />
         <StatsCard
           title="Drafts"
           value={stats.drafts}
-          icon={<span className="text-brand-placeholder font-bold text-lg">✎</span>}
-          trend={{ value: 3, label: 'abandoned', positive: false }}
+          icon={
+            <span className="text-brand-placeholder font-bold text-lg">✎</span>
+          }
+          trend={{ value: 3, label: "abandoned", positive: false }}
         />
         <StatsCard
           title="Pending Review"
           value={stats.pending}
           icon={<span className="text-amber-500 font-bold text-lg">⚠</span>}
-          trend={{ value: 1, label: 'needs action', positive: false }}
+          trend={{ value: 1, label: "needs action", positive: false }}
         />
         <StatsCard
           title="Successfully Provisioned"
           value={stats.completed}
           icon={<span className="text-emerald-500 font-bold text-lg">✓</span>}
-          trend={{ value: 8, label: 'this month', positive: true }}
+          trend={{ value: 8, label: "this month", positive: true }}
         />
       </div>
 
       {/* Top Level Tabs (Requests vs Analytics) */}
       <div className="flex space-x-6 border-b border-brand-border mb-6">
         <button
-          onClick={() => setActiveTab('requests')}
+          onClick={() => setActiveTab("requests")}
           className={`py-3 px-1 border-b-2 text-sm font-semibold transition-colors ${
-            activeTab === 'requests' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-brand-muted hover:text-brand-dark'
+            activeTab === "requests"
+              ? "border-brand-primary text-brand-primary"
+              : "border-transparent text-brand-muted hover:text-brand-dark"
           }`}
         >
           Registration Requests
         </button>
         <button
-          onClick={() => setActiveTab('analytics')}
+          onClick={() => setActiveTab("analytics")}
           className={`py-3 px-1 border-b-2 text-sm font-semibold transition-colors ${
-            activeTab === 'analytics' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-brand-muted hover:text-brand-dark'
+            activeTab === "analytics"
+              ? "border-brand-primary text-brand-primary"
+              : "border-transparent text-brand-muted hover:text-brand-dark"
           }`}
         >
           Onboarding Analytics
         </button>
       </div>
 
-      {activeTab === 'requests' ? (
+      {activeTab === "requests" ? (
         <div className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden">
           {/* Status Filter Tabs */}
           <div className="border-b border-brand-border px-6">
             <nav className="-mb-px flex space-x-6">
-              {(['all', 'draft', 'pending', 'completed'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setStatusFilter(tab)}
-                  className={`whitespace-nowrap py-4 px-1 border-b-2 text-sm font-medium transition-colors capitalize ${
-                    statusFilter === tab
-                      ? 'border-brand-dark text-brand-dark'
-                      : 'border-transparent text-brand-muted hover:text-brand-dark'
-                  }`}
-                >
-                  {tab === 'pending' ? 'Pending Review' : tab}
-                </button>
-              ))}
+              {(["all", "draft", "pending", "completed"] as const).map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setStatusFilter(tab)}
+                    className={`whitespace-nowrap py-4 px-1 border-b-2 text-sm font-medium transition-colors capitalize ${
+                      statusFilter === tab
+                        ? "border-brand-dark text-brand-dark"
+                        : "border-transparent text-brand-muted hover:text-brand-dark"
+                    }`}
+                  >
+                    {tab === "pending" ? "Pending Review" : tab}
+                  </button>
+                ),
+              )}
             </nav>
           </div>
 

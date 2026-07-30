@@ -8,7 +8,7 @@ import Link from "next/link";
 export function PlanCard({ plan }: { plan: SubscriptionPlan }) {
   const isEnterprise = plan.planType === "enterprise";
   const isPro = plan.planType === "paid"; // Or whatever denotes the middle tier
-
+  const planName = plan.name.replace("_", " ");
   // Decide an icon based on plan type for the top-left
   const PlanIcon = isEnterprise ? Building2 : isPro ? Rocket : Box;
 
@@ -38,7 +38,7 @@ export function PlanCard({ plan }: { plan: SubscriptionPlan }) {
         </div>
 
         {/* Title & Description */}
-        <h3 className="text-xl font-semibold mb-1">{plan.name}</h3>
+        <h3 className="text-xl font-semibold mb-1">{planName}</h3>
         <p
           className={`text-xs mb-4 ${isEnterprise ? "text-slate-300" : "text-brand-muted"}`}
         >
@@ -87,7 +87,7 @@ export function PlanCard({ plan }: { plan: SubscriptionPlan }) {
                 : "bg-brand-dark text-white hover:bg-black border-transparent"
             }`}
           >
-            Configure {plan.name}
+            Configure Plan
           </Button>
         </Link>
 
@@ -111,36 +111,6 @@ export function PlanCard({ plan }: { plan: SubscriptionPlan }) {
             <FeatureRow
               label={`${plan.limits.employees === -1 ? "Unlimited" : plan.limits.employees} Users`}
               included={true}
-              isEnterprise={isEnterprise}
-            />
-            <FeatureRow
-              label={`${plan.limits.products === -1 ? "Unlimited" : plan.limits.products} Products`}
-              included={true}
-              isEnterprise={isEnterprise}
-            />
-            <FeatureRow
-              label={`${plan.limits.monthlyOrders === -1 ? "Unlimited" : plan.limits.monthlyOrders} Orders/mo`}
-              included={true}
-              isEnterprise={isEnterprise}
-            />
-            <FeatureRow
-              label="Core POS Module"
-              included={true}
-              isEnterprise={isEnterprise}
-            />
-            <FeatureRow
-              label="Advanced Inventory"
-              included={plan.modules.inventory}
-              isEnterprise={isEnterprise}
-            />
-            <FeatureRow
-              label="CRM & Loyalty"
-              included={plan.modules.crm}
-              isEnterprise={isEnterprise}
-            />
-            <FeatureRow
-              label="Open API Access"
-              included={plan.modules.apiAccess}
               isEnterprise={isEnterprise}
             />
           </div>

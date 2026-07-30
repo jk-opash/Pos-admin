@@ -1,20 +1,63 @@
-import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+"use client";
+
+import { useAppSelector } from "@/store/hooks";
+import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/Table";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import Link from "next/link";
+import { formatDate } from "@/lib/utils";
 
 export function RecentRegistrationsTable() {
-  const registrations = [
-    { name: 'BuildRight Hardware', owner: 'Rahul Sharma', industry: 'Hardware', plan: 'Trial', status: 'Pending', date: '2025-07-06' },
-    { name: 'FreshMart Grocery', owner: 'Amit Singh', industry: 'Grocery', plan: 'Growth', status: 'Active', date: '2025-07-05' },
-    { name: 'Style Street Clothing', owner: 'Priya Patel', industry: 'Retail', plan: 'Starter', status: 'Active', date: '2025-07-04' },
-    { name: 'MediPlus Pharmacy', owner: 'Dr. Kumar', industry: 'Pharmacy', plan: 'Professional', status: 'Active', date: '2025-07-03' },
-  ];
+  const { businesses } = useAppSelector((state) => state.business);
+
+  const getOwnerName = (b: any) => {
+    if (b.owner_name) return b.owner_name;
+    if (typeof b.owner === "string") return b.owner;
+    if (b.owner?.name) return b.owner.name;
+    if (b.admin?.name) return b.admin.name;
+    return "N/A";
+  };
+
+  const getBusinessType = (b: any) => {
+    const type = b.business_type || b.type || b.businessType || "Retail";
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  const getPlanName = (b: any) => {
+    const plan =
+      b.subscription_plan?.name ||
+      b.subscription_plan?.plan ||
+      b.subscription?.plan ||
+      "Starter";
+    return plan.charAt(0).toUpperCase() + plan.slice(1);
+  };
+
+  const list = [...businesses]
+    .sort((a: any, b: any) => {
+      const timeA = new Date(a.created_at || a.createdAt || 0).getTime();
+      const timeB = new Date(b.created_at || b.createdAt || 0).getTime();
+      return timeB - timeA;
+    })
+    .slice(0, 5);
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Recent Registrations</CardTitle>
+        <Link
+          href="/businesses"
+          className="text-xs font-semibold text-brand-primary hover:underline"
+        >
+          View All
+        </Link>
       </CardHeader>
       <div className="overflow-x-auto pb-2">
         <Table>
@@ -24,25 +67,57 @@ export function RecentRegistrationsTable() {
               <TableHead>Owner</TableHead>
               <TableHead>Industry</TableHead>
               <TableHead>Plan</TableHead>
+              <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {registrations.map((reg, i) => (
-              <TableRow key={i}>
-                <TableCell className="font-medium">{reg.name}</TableCell>
-                <TableCell>{reg.owner}</TableCell>
-                <TableCell>{reg.industry}</TableCell>
-                <TableCell><Badge variant="muted">{reg.plan}</Badge></TableCell>
+            {list.map((b: any) => (
+              <TableRow key={b.id}>
+                <TableCell className="font-medium">{b.name}</TableCell>
+                <TableCell>{getOwnerName(b)}</TableCell>
+                <TableCell>{getBusinessType(b)}</TableCell>
                 <TableCell>
-                  <Badge variant={reg.status === 'Active' ? 'success' : 'warning'}>{reg.status}</Badge>
+                  <Badge variant="muted">{getPlanName(b)}</Badge>
+                </TableCell>
+                <TableCell className="text-xs text-brand-muted">
+                  {b.created_at || b.createdAt
+                    ? formatDate(b.created_at || b.createdAt)
+                    : "N/A"}
                 </TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm" className="h-7 text-xs">View</Button>
+                  <Badge
+                    variant={
+                      b.status === "active"
+                        ? "success"
+                        : b.status === "pending" || b.status === "onboarding"
+                          ? "warning"
+                          : "muted"
+                    }
+                  >
+                    {(b.status || "pending").toUpperCase()}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Link href={`/businesses/${b.id}`}>
+                    <Button variant="outline" size="sm" className="h-7 text-xs">
+                      View
+                    </Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}
+            {list.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-6 text-brand-muted"
+                >
+                  No business registrations found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
@@ -51,15 +126,39 @@ export function RecentRegistrationsTable() {
 }
 
 export function PendingApprovalsTable() {
-  const approvals = [
-    { name: 'Urban Cafe', owner: 'Neha Gupta', date: '2025-07-07', docs: '3/3' },
-    { name: 'TechHaven Electronics', owner: 'Vikram Joshi', date: '2025-07-06', docs: '2/3' },
-  ];
+  const { businesses } = useAppSelector((state) => state.business);
+
+  const getOwnerName = (b: any) => {
+    if (b.owner_name) return b.owner_name;
+    if (typeof b.owner === "string") return b.owner;
+    if (b.owner?.name) return b.owner.name;
+    if (b.admin?.name) return b.admin.name;
+    return "N/A";
+  };
+
+  const pendingList = businesses
+    .filter(
+      (b) =>
+        b.status === "pending" ||
+        b.status === "onboarding" ||
+        b.status === "trial",
+    )
+    .sort((a: any, b: any) => {
+      const timeA = new Date(a.created_at || a.createdAt || 0).getTime();
+      const timeB = new Date(b.created_at || b.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Pending Approvals</CardTitle>
+        <Link
+          href="/onboarding"
+          className="text-xs font-semibold text-brand-primary hover:underline"
+        >
+          Review Onboarding
+        </Link>
       </CardHeader>
       <div className="overflow-x-auto pb-2">
         <Table>
@@ -68,26 +167,40 @@ export function PendingApprovalsTable() {
               <TableHead>Business Name</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Submitted</TableHead>
-              <TableHead>Documents</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {approvals.map((app, i) => (
-              <TableRow key={i}>
+            {pendingList.map((app: any) => (
+              <TableRow key={app.id}>
                 <TableCell className="font-medium">{app.name}</TableCell>
-                <TableCell>{app.owner}</TableCell>
-                <TableCell>{app.date}</TableCell>
-                <TableCell>{app.docs} Verified</TableCell>
+                <TableCell>{getOwnerName(app)}</TableCell>
+                <TableCell>
+                  {formatDate(app.created_at || app.createdAt)}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="warning">
+                    {(app.status || "Pending").toUpperCase()}
+                  </Badge>
+                </TableCell>
                 <TableCell className="flex gap-2">
-                  <Button variant="primary" size="sm" className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700">Approve</Button>
-                  <Button variant="outline" size="sm" className="h-7 text-xs">Review</Button>
+                  <Link href={`/businesses/${app.id}`}>
+                    <Button variant="outline" size="sm" className="h-7 text-xs">
+                      Review
+                    </Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}
-            {approvals.length === 0 && (
+            {pendingList.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-4 text-slate-500">No pending approvals.</TableCell>
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-6 text-brand-muted"
+                >
+                  No pending approvals required.
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
