@@ -41,6 +41,42 @@ export const fetchInvoices = createAsyncThunk(
   }
 );
 
+export const addSubscriptionPlan = createAsyncThunk(
+  'subscription/addSubscriptionPlan',
+  async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/subscription', data);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to add subscription plan');
+    }
+  }
+);
+
+export const updateSubscriptionPlan = createAsyncThunk(
+  'subscription/updateSubscriptionPlan',
+  async ({ id, data }: { id: string, data: any }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/subscription/${id}`, data);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to update subscription plan');
+    }
+  }
+);
+
+export const purchaseAddons = createAsyncThunk(
+  'subscription/purchaseAddons',
+  async (data: { business_id: string; addons: { branches: number; team_members: number }; amount: number; currency: string; payment_method: string }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/subscription/addons', data);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to purchase addons');
+    }
+  }
+);
+
 const subscriptionSlice = createSlice({
   name: 'subscription',
   initialState,

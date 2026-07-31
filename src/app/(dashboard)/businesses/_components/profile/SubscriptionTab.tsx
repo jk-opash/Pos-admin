@@ -13,8 +13,14 @@ export function SubscriptionTab({ business }: { business: Business }) {
 
   // Use API values with fallback to business defaults
   const planSlug = (subPlan?.plan || business.subscription.plan) as any;
-  const maxBranches = subPlan?.max_branches ?? 5;
-  const maxUsers = subPlan?.max_team_members ?? 50;
+  
+  const baseBranches = subPlan?.max_branches ?? business.subscription.maxBranches ?? 5;
+  const baseUsers = subPlan?.max_team_members ?? business.subscription.maxUsers ?? 50;
+  const extraBranches = currentBusiness?.extra_branches || 0;
+  const extraUsers = currentBusiness?.extra_team_members || 0;
+  
+  const maxBranches = baseBranches + extraBranches;
+  const maxUsers = baseUsers + extraUsers;
   const mrrAmount = subPlan?.amount ? Number(subPlan.amount) : business.stats.revenueMTD;
   const renewalDate = subPlan?.updated_at || business.subscription.endsAt;
   const isAutoRenew = subPlan?.auto_renew ?? business.subscription.autoRenew;

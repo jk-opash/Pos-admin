@@ -10,11 +10,12 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  description?: string;
   children: React.ReactNode;
   className?: string;
 }
 
-export function Modal({ isOpen, onClose, title, children, className, size = 'lg' }: ModalProps) {
+export function Modal({ isOpen, onClose, title, description, children, className, size = 'lg' }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const sizeClasses = {
@@ -62,8 +63,11 @@ export function Modal({ isOpen, onClose, title, children, className, size = 'lg'
           className
         )}
       >
-        <div className="flex items-center justify-between p-6 pb-4 border-b border-white/20 bg-white/40 backdrop-blur-md">
-          {title && <h2 className="text-xl font-bold text-brand-dark">{title}</h2>}
+        <div className="flex items-start justify-between p-6 pb-4 border-b border-white/20 bg-white/40 backdrop-blur-md">
+          <div>
+            {title && <h2 className="text-xl font-bold text-brand-dark">{title}</h2>}
+            {description && <p className="mt-1 text-sm text-brand-muted">{description}</p>}
+          </div>
           <button
             onClick={onClose}
             className="rounded-lg p-1.5 text-brand-placeholder transition-colors hover:bg-white hover:text-brand-dark shadow-sm"

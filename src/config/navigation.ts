@@ -14,7 +14,7 @@ import {
 
 export const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/businesses', label: 'Businesses', icon: Store },
+  { href: '/businesses', label: 'Businesses & Owners', icon: Store },
   { href: '/onboarding', label: 'Onboarding', icon: UserPlus },
   { href: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
   { href: '/payments', label: 'Payments', icon: Receipt },

@@ -1,9 +1,7 @@
 import { Payment } from '@/types';
 import { Modal } from '@/components/ui/Modal';
-import { Badge } from '@/components/ui/Badge';
-import { formatCurrency, formatDate } from '@/lib/utils';
-import { Receipt, CheckCircle2, XCircle, Clock, Copy, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Download, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface PaymentDetailsModalProps {
   isOpen: boolean;
@@ -12,105 +10,110 @@ interface PaymentDetailsModalProps {
 }
 
 export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetailsModalProps) {
+  const [downloading, setDownloading] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+  useEffect(() => {
+    let currentUrl: string | null = null;
+    
+    if (payment && isOpen) {
+      let isMounted = true;
+      const loadPreview = async () => {
+        setIsPreviewLoading(true);
+        try {
+          const res = await fetch('/api/payment/pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payment),
+          });
+          if (res.ok) {
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            currentUrl = url;
+            if (isMounted) setPdfPreviewUrl(url);
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          if (isMounted) setIsPreviewLoading(false);
+        }
+      };
+      loadPreview();
+      
+      return () => {
+        isMounted = false;
+        if (currentUrl) window.URL.revokeObjectURL(currentUrl);
+      };
+    } else {
+      setPdfPreviewUrl(null);
+    }
+  }, [payment, isOpen]);
+
+  const downloadPDF = async () => {
+    if (!payment) return;
+    try {
+      setDownloading(true);
+      const res = await fetch('/api/payment/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payment),
+      });
+
+      if (!res.ok) throw new Error('Failed to generate PDF');
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Receipt-${payment.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (!payment) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Transaction Details">
-      <div className="space-y-6">
-        {/* Header Status */}
-        <div className="flex items-center justify-between p-4 bg-brand-light rounded-xl border border-brand-border">
-          <div className="flex items-center gap-3">
-            {payment.status === 'success' ? (
-              <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-            ) : payment.status === 'failed' ? (
-              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                <XCircle className="h-5 w-5" />
-              </div>
-            ) : (
-              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                <Clock className="h-5 w-5" />
-              </div>
-            )}
-            <div>
-              <p className="text-sm text-brand-muted">Amount</p>
-              <p className="text-2xl font-bold text-brand-dark">
-                {formatCurrency(payment.amount, payment.currency === 'usd')}
-              </p>
+    <Modal isOpen={isOpen} onClose={onClose} title="Transaction Details" size="4xl">
+      <div className="flex flex-col h-[70vh] -mx-6 -mb-6 -mt-4 bg-slate-100/50 rounded-b-3xl overflow-hidden relative">
+        <div className="flex-1 w-full h-full relative">
+          {isPreviewLoading ? (
+            <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/50 backdrop-blur-sm z-10">
+              <Loader2 className="h-8 w-8 animate-spin text-brand-primary mb-2" />
+              <p className="text-sm font-medium text-brand-muted">Generating PDF preview...</p>
             </div>
-          </div>
-          <div className="text-right">
-            <Badge variant={
-              payment.status === 'success' ? 'success' : 
-              payment.status === 'failed' ? 'danger' : 'warning'
-            } dot>
-              {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-            </Badge>
-          </div>
+          ) : pdfPreviewUrl ? (
+            <iframe src={pdfPreviewUrl} className="w-full h-full border-0" title="Payment Receipt PDF" />
+          ) : (
+            <div className="absolute inset-0 flex justify-center items-center bg-white">
+              <p className="text-sm font-medium text-red-500">Failed to load PDF preview.</p>
+            </div>
+          )}
         </div>
 
-        {/* Core Details Grid */}
-        <div className="grid grid-cols-2 gap-y-4 gap-x-8">
-          <div>
-            <p className="text-xs text-brand-muted uppercase tracking-wider mb-1">Transaction ID</p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-mono text-brand-dark">{payment.id}</span>
-              <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-transparent text-brand-muted hover:text-brand-primary">
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs text-brand-muted uppercase tracking-wider mb-1">Business Name</p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-brand-dark">{payment.businessName || payment.businessId}</span>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs text-brand-muted uppercase tracking-wider mb-1">Date & Time</p>
-            <p className="text-sm font-medium text-brand-dark">{formatDate(payment.createdAt)}</p>
-          </div>
-
-          <div>
-            <p className="text-xs text-brand-muted uppercase tracking-wider mb-1">Payment Method</p>
-            <p className="text-sm font-medium text-brand-dark uppercase">{payment.paymentMethod}</p>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="h-px bg-brand-border w-full"></div>
-
-        {/* Error Details if Failed */}
-        {payment.status === 'failed' && (payment as any).errorMessage && (
-          <div className="p-3 rounded-lg bg-red-50 border border-red-100">
-            <p className="text-xs text-red-600 font-semibold mb-1">Failure Reason</p>
-            <p className="text-sm text-red-700">{(payment as any).errorMessage}</p>
-          </div>
-        )}
-
-        {/* Raw Metadata (Mocked) */}
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-          <p className="text-xs text-brand-muted font-mono mb-2">Raw Gateway Metadata</p>
-          <pre className="text-[10px] text-slate-600 overflow-x-auto whitespace-pre-wrap font-mono">
-            {JSON.stringify({
-              gateway_id: `ch_${payment.id.split('-')[0] || '123456'}`,
-              risk_level: "normal",
-              network: "visa",
-              funding: "credit",
-              country: "IN"
-            }, null, 2)}
-          </pre>
-        </div>
-
-        {/* Footer Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-brand-border">
-          <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button variant="primary" className="gap-2">
-            <Receipt className="h-4 w-4" /> Download Receipt
-          </Button>
+        <div className="p-4 border-t border-brand-border bg-white flex justify-end gap-3 shrink-0">
+          <button 
+            onClick={onClose}
+            className="px-6 py-2 rounded-xl border border-brand-border text-sm font-semibold text-brand-dark hover:bg-slate-50 transition-colors"
+          >
+            Close
+          </button>
+          <button 
+            onClick={downloadPDF}
+            disabled={downloading || isPreviewLoading}
+            className="px-6 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold hover:bg-brand-primaryDark transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+          >
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} 
+            {downloading ? 'Generating...' : 'Download Receipt'}
+          </button>
         </div>
       </div>
     </Modal>

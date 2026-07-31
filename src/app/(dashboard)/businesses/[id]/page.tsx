@@ -100,9 +100,7 @@ export default function BusinessProfilePage() {
   const [business, setBusiness] = useState<Business | undefined>(undefined);
   const [isSuspended, setIsSuspended] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editTab, setEditTab] = useState<
-    "info" | "location" | "legal"
-  >("info");
+  const [editTab, setEditTab] = useState<"info" | "location" | "legal">("info");
   const [activeTab, setActiveTab] = useState("overview");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -147,21 +145,24 @@ export default function BusinessProfilePage() {
         legalName: currentBusiness.legal_name || "",
         gstin: currentBusiness.gstin || "",
         pan: currentBusiness.pan || "",
-        subscription: currentBusiness.subscription_plan ? {
-          plan: currentBusiness.subscription_plan.plan as SubscriptionPlanSlug,
-          status: currentBusiness.subscription_plan.status,
-          endsAt: currentBusiness.subscription_plan.updated_at,
-          autoRenew: currentBusiness.subscription_plan.auto_renew,
-          maxBranches: currentBusiness.subscription_plan.max_branches,
-          maxUsers: currentBusiness.subscription_plan.max_team_members,
-        } : { 
-          plan: "free_trial", 
-          status: "active", 
-          endsAt: "N/A", 
-          autoRenew: false,
-          maxBranches: 5,
-          maxUsers: 50,
-        },
+        subscription: currentBusiness.subscription_plan
+          ? {
+              plan: currentBusiness.subscription_plan
+                .plan as SubscriptionPlanSlug,
+              status: currentBusiness.subscription_plan.status,
+              endsAt: currentBusiness.subscription_plan.updated_at,
+              autoRenew: currentBusiness.subscription_plan.auto_renew,
+              maxBranches: currentBusiness.subscription_plan.max_branches,
+              maxUsers: currentBusiness.subscription_plan.max_team_members,
+            }
+          : {
+              plan: "free_trial",
+              status: "active",
+              endsAt: "N/A",
+              autoRenew: false,
+              maxBranches: 5,
+              maxUsers: 50,
+            },
         stats: {
           branches: currentBusiness.branches?.length ?? 0,
           users: currentBusiness.teamMembers?.length ?? 0,
@@ -206,6 +207,28 @@ export default function BusinessProfilePage() {
     }
   };
 
+  const handleToggleSuspend = async (suspend: boolean) => {
+    if (!business) return;
+    setIsSaving(true);
+    try {
+      const backendData = {
+        status: suspend ? "suspended" : "active",
+        is_active: !suspend,
+      };
+      await dispatch(updateBusiness({ id, data: backendData })).unwrap();
+      setBusiness({
+        ...business,
+        status: suspend ? "suspended" : "active",
+        is_active: !suspend,
+      } as any);
+      setIsSuspended(suspend);
+    } catch (err) {
+      console.error("Failed to toggle suspend status", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading && !business) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center text-center">
@@ -235,7 +258,6 @@ export default function BusinessProfilePage() {
     { id: "overview", label: "Overview" },
     { id: "subscription", label: "Subscription & Limits" },
     { id: "branches", label: "Branches & Staff" },
-    { id: "audit", label: "Audit & Activity" },
     { id: "settings", label: "Settings" },
   ];
 
@@ -269,17 +291,30 @@ export default function BusinessProfilePage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-          {isSuspended ? (
-            <Button variant="primary" onClick={() => setIsSuspended(false)}>
-              Restore Access
+          {business.is_active === false || business.status === "suspended" ? (
+            <Button
+              variant="primary"
+              onClick={() => handleToggleSuspend(false)}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Restore Access"
+              )}
             </Button>
           ) : (
             <Button
               variant="danger"
               className="bg-red-50 text-red-600 hover:bg-red-100 border-none shadow-none"
-              onClick={() => setIsSuspended(true)}
+              onClick={() => handleToggleSuspend(true)}
+              disabled={isSaving}
             >
-              Suspend
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Suspend"
+              )}
             </Button>
           )}
           <Button
@@ -331,7 +366,6 @@ export default function BusinessProfilePage() {
           <SubscriptionTab business={business} />
         )}
         {activeTab === "branches" && <BranchesTab business={business} />}
-        {activeTab === "audit" && <AuditTab business={business} />}
         {activeTab === "settings" && <SettingsTab business={business} />}
       </div>
 

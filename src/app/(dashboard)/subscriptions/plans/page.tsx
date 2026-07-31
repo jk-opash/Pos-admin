@@ -72,7 +72,7 @@ export default function PlansPage() {
     },
     trialDays: 14,
     isPopular: sub.plan === 'professional' || sub.plan === 'growth',
-    isActive: sub.status === 'active' || sub.status === 'trialing',
+    isActive: sub.is_active ?? (sub.status === 'active' || sub.status === 'trialing'),
   }));
 
   const filteredPlans = mappedPlans.filter(plan => {

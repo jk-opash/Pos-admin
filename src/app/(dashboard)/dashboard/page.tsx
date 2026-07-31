@@ -72,14 +72,19 @@ export default function DashboardPage() {
     0,
   );
 
-  const mrr =
-    businesses
-      .filter((b: any) => b.status === "active" || b.status === "trial")
-      .reduce(
-        (acc, b: any) => acc + Number(b.subscription_plan?.amount || 0),
-        0,
-      ) || totalRevenue;
+  const baseMRR = businesses
+    .filter((b: any) => b.status === "active" || b.status === "trial")
+    .reduce((acc, b: any) => acc + Number(b.subscription_plan?.amount || 0), 0);
 
+  const addonsMRR = invoices
+    .filter(
+      (i: any) =>
+        i.invoice_number?.startsWith("INV-ADDON-") &&
+        (i.status === "paid" || i.status === "success"),
+    )
+    .reduce((acc, i: any) => acc + Number(i.amount || 0), 0);
+
+  const mrr = baseMRR + addonsMRR || totalRevenue;
   const arr = mrr * 12;
 
   // Monthly Revenue Chart calculation (Jan - Dec)
@@ -231,6 +236,19 @@ export default function DashboardPage() {
   );
   const recentActivity = activityList.slice(0, 6);
 
+  const todayRevenue = invoices
+    .filter((inv: any) => {
+      if (inv.status !== "paid" && inv.status !== "success") return false;
+      const d = new Date(inv.paid_at || inv.issued_at || inv.created_at);
+      const today = new Date();
+      return (
+        d.getDate() === today.getDate() &&
+        d.getMonth() === today.getMonth() &&
+        d.getFullYear() === today.getFullYear()
+      );
+    })
+    .reduce((acc, inv: any) => acc + Number(inv.amount || 0), 0);
+
   const stats: DashboardStats = {
     ...mockDashboardStats,
     totalBusinesses,
@@ -255,7 +273,7 @@ export default function DashboardPage() {
     upcomingRenewals: invoices.filter((i: any) => i.status === "pending")
       .length,
     totalRevenue,
-    todayRevenue: 0,
+    todayRevenue,
     mrr,
     mrrGrowth: 0,
     arr,
@@ -360,7 +378,6 @@ export default function DashboardPage() {
           <SummaryCardsGrid stats={stats} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="flex flex-col gap-6">
-              <QuickActions />
               <RevenueChart data={stats.revenueChart} />
             </div>
             <RecentActivity activities={stats.recentActivity} />

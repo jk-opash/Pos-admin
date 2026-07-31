@@ -19,6 +19,7 @@ import {
   AlertCircle,
   FileText,
   Loader2,
+  PlusCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
@@ -47,16 +48,20 @@ export default function SubscriptionsDashboard() {
     (i) => i.status === "overdue" || i.status === "pending",
   ).length;
 
-  // Real MRR calculation: Sum of active business plan amounts or paid invoice totals
+  // Real MRR calculation: Sum of active business plan amounts + paid addon invoices
   const activePlansMRR = businesses
     .filter((b) => b.status === "active" || b.status === "trial")
     .reduce((acc, b) => acc + Number(b.subscription_plan?.amount || 0), 0);
+    
+  const paidAddonsTotal = invoices
+    .filter((i) => i.invoice_number?.startsWith("INV-ADDON-") && (i.status === "paid" || i.status === "success"))
+    .reduce((acc, i) => acc + Number(i.amount || 0), 0);
 
   const paidInvoicesTotal = invoices
-    .filter((i) => i.status === "paid")
+    .filter((i) => i.status === "paid" || i.status === "success")
     .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
 
-  const mrr = activePlansMRR > 0 ? activePlansMRR : paidInvoicesTotal;
+  const mrr = (activePlansMRR + paidAddonsTotal) || paidInvoicesTotal;
   const arr = mrr * 12;
 
   const isLoading =
@@ -74,10 +79,15 @@ export default function SubscriptionsDashboard() {
             Overview of SaaS revenue, active subscriptions, and billing health.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href="/subscriptions/plans">
             <Button variant="outline" className="gap-2">
               <Store className="h-4 w-4" /> Manage Plans
+            </Button>
+          </Link>
+          <Link href="/subscriptions/addons">
+            <Button variant="outline" className="gap-2 border-brand-primary text-brand-primary hover:bg-brand-primaryLight hover:text-brand-primaryDark transition-colors">
+              <PlusCircle className="h-4 w-4" /> Buy Add-ons
             </Button>
           </Link>
           <Link href="/subscriptions/billing">

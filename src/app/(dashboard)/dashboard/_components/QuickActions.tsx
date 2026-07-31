@@ -18,11 +18,6 @@ import Link from "next/link";
 export function QuickActions() {
   const actions = [
     {
-      icon: <Store className="h-4 w-4" />,
-      label: "Add Business",
-      href: "/businesses/onboard",
-    },
-    {
       icon: <UserPlus className="h-4 w-4" />,
       label: "Approve Business",
       href: "/businesses",

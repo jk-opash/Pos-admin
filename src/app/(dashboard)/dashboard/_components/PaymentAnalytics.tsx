@@ -23,6 +23,17 @@ export function PaymentAnalytics({
   pendingPayments: number;
   failedPayments: number;
 }) {
+  const statusData = [
+    { name: "Successful", value: totalRevenue, color: "#059669" }, // emerald-600
+    { name: "Pending", value: pendingPayments, color: "#d97706" }, // amber-600
+    { name: "Failed", value: failedPayments, color: "#dc2626" }, // red-600
+  ].filter(d => d.value > 0);
+
+  // Fallback if all values are 0
+  if (statusData.length === 0) {
+    statusData.push({ name: "No Data", value: 1, color: "#e5e7eb" });
+  }
+
   return (
     <div className="bg-white border border-brand-border rounded-xl p-5">
       <div className="mb-6 flex justify-between items-center">
@@ -42,7 +53,7 @@ export function PaymentAnalytics({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={paymentData}
+                data={statusData}
                 cx="50%"
                 cy="50%"
                 innerRadius={60}
@@ -50,7 +61,7 @@ export function PaymentAnalytics({
                 paddingAngle={5}
                 dataKey="value"
               >
-                {paymentData.map((entry, index) => (
+                {statusData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
@@ -60,7 +71,7 @@ export function PaymentAnalytics({
                   border: "none",
                   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                 }}
-                formatter={(value) => [`${value}%`, "Usage"]}
+                formatter={(value) => [formatCurrency(value as number), "Amount"]}
               />
               <Legend verticalAlign="bottom" height={36} iconType="circle" />
             </PieChart>

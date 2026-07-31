@@ -1,11 +1,31 @@
+"use client";
+
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Check, Box, Building2, Rocket } from "lucide-react";
+import { Check, Box, Building2, Rocket, Loader2 } from "lucide-react";
 import { SubscriptionPlan } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
+import { useState } from "react";
+import { useAppDispatch } from "@/store/hooks";
+import { updateSubscriptionPlan, fetchSubscriptions } from "@/store/slices/subscriptionSlice";
 
 export function PlanCard({ plan }: { plan: SubscriptionPlan }) {
+  const dispatch = useAppDispatch();
+  const [isToggling, setIsToggling] = useState(false);
+
+  const handleToggle = async () => {
+    setIsToggling(true);
+    try {
+      await dispatch(updateSubscriptionPlan({ id: plan.id, data: { is_active: !plan.isActive } })).unwrap();
+      await dispatch(fetchSubscriptions());
+    } catch (err) {
+      console.error("Failed to toggle plan active status", err);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   const isEnterprise = plan.planType === "enterprise";
   const isPro = plan.planType === "paid"; // Or whatever denotes the middle tier
   const planName = plan.name.replace("_", " ");
@@ -21,20 +41,50 @@ export function PlanCard({ plan }: { plan: SubscriptionPlan }) {
       }`}
     >
       <div className="flex flex-col flex-1 p-5">
-        {/* Header section with Icon & Badge */}
         <div className="flex justify-between items-start mb-4">
           <PlanIcon
             className={`h-8 w-8 ${isEnterprise ? "text-white" : "text-brand-dark"}`}
             strokeWidth={1.5}
           />
-          {plan.isPopular && (
-            <Badge
-              variant="purple"
-              className="text-[10px] bg-purple-100 text-purple-700 border-none font-semibold px-2 py-0.5"
-            >
-              Most Popular
-            </Badge>
-          )}
+          <div className="flex flex-col gap-2 items-end">
+            <div className="flex flex-wrap gap-1 justify-end">
+              {plan.isPopular && (
+                <Badge
+                  variant="purple"
+                  className="text-[10px] bg-purple-100 text-purple-700 border-none font-semibold px-2 py-0.5"
+                >
+                  Most Popular
+                </Badge>
+              )}
+              {!plan.isActive && (
+                <Badge
+                  variant="danger"
+                  className="text-[10px] bg-red-100 text-red-700 border-red-200 font-semibold px-2 py-0.5"
+                >
+                  Inactive
+                </Badge>
+              )}
+            </div>
+            
+            <label className="flex items-center gap-2 cursor-pointer group mt-1">
+              <span className={`text-[10px] font-medium ${isEnterprise ? 'text-slate-300' : 'text-slate-500'}`}>
+                {plan.isActive ? 'Active' : 'Inactive'}
+              </span>
+              <div className="relative inline-flex h-[20px] w-[36px] shrink-0 cursor-pointer items-center justify-center rounded-full">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={plan.isActive}
+                  onChange={handleToggle}
+                  disabled={isToggling}
+                />
+                <span className="pointer-events-none absolute h-full w-full rounded-full bg-slate-200 transition-colors peer-checked:bg-brand-primary peer-focus-visible:ring-2 peer-focus-visible:ring-brand-primary peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-white peer-disabled:cursor-not-allowed peer-disabled:opacity-50"></span>
+                <span className={`pointer-events-none absolute left-[2px] h-[16px] w-[16px] rounded-full bg-white shadow-sm ring-0 transition-transform ${plan.isActive ? 'translate-x-[16px]' : 'translate-x-0'} flex items-center justify-center`}>
+                  {isToggling && <Loader2 className="h-2.5 w-2.5 animate-spin text-brand-primary" />}
+                </span>
+              </div>
+            </label>
+          </div>
         </div>
 
         {/* Title & Description */}

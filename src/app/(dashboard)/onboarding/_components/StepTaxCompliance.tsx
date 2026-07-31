@@ -39,7 +39,9 @@ export function StepTaxCompliance() {
             subtitle="PDF or JPG, max 5MB"
             required={true}
             currentUrl={onboardingForm.identity_verification}
-            onUploadSuccess={(url) => handleChange("identity_verification", url)}
+            onUploadSuccess={(url) =>
+              handleChange("identity_verification", url)
+            }
           />
 
           <DocumentUploadItem
@@ -56,14 +58,6 @@ export function StepTaxCompliance() {
             required={false}
             currentUrl={onboardingForm.gst_certificate}
             onUploadSuccess={(url) => handleChange("gst_certificate", url)}
-          />
-
-          <DocumentUploadItem
-            title="Trade License / Registration"
-            subtitle="Optional, but recommended for faster verification"
-            required={false}
-            currentUrl={onboardingForm.trade_license}
-            onUploadSuccess={(url) => handleChange("trade_license", url)}
           />
         </div>
       </div>
