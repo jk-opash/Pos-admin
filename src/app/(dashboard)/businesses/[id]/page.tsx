@@ -2,22 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { mockBusinesses } from "@/lib/mock/businesses";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EditBusinessModal } from "../_components/EditBusinessModal";
 import { formatDate } from "@/lib/utils";
-import {
-  Building,
-  Edit,
-  ChevronLeft,
-  Store,
-  User,
-  MapPin,
-  BarChart3,
-  Loader2,
-  FileText,
-} from "lucide-react";
+import { Building, Edit, ChevronLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import {
   BusinessStatus,
@@ -34,9 +23,7 @@ import {
 // Import Tabs
 import { OverviewTab } from "@/app/(dashboard)/businesses/_components/profile/OverviewTab";
 import { SubscriptionTab } from "@/app/(dashboard)/businesses/_components/profile/SubscriptionTab";
-import { FeaturesTab } from "@/app/(dashboard)/businesses/_components/profile/FeaturesTab";
 import { BranchesTab } from "@/app/(dashboard)/businesses/_components/profile/BranchesTab";
-import { AuditTab } from "@/app/(dashboard)/businesses/_components/profile/AuditTab";
 import { SettingsTab } from "@/app/(dashboard)/businesses/_components/profile/SettingsTab";
 
 export function StatusBadge({ status }: { status: BusinessStatus }) {
@@ -100,7 +87,6 @@ export default function BusinessProfilePage() {
   const [business, setBusiness] = useState<Business | undefined>(undefined);
   const [isSuspended, setIsSuspended] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editTab, setEditTab] = useState<"info" | "location" | "legal">("info");
   const [activeTab, setActiveTab] = useState("overview");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -219,8 +205,7 @@ export default function BusinessProfilePage() {
       setBusiness({
         ...business,
         status: suspend ? "suspended" : "active",
-        is_active: !suspend,
-      } as any);
+      });
       setIsSuspended(suspend);
     } catch (err) {
       console.error("Failed to toggle suspend status", err);
@@ -291,7 +276,7 @@ export default function BusinessProfilePage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-          {business.is_active === false || business.status === "suspended" ? (
+          {business.status === "suspended" ? (
             <Button
               variant="primary"
               onClick={() => handleToggleSuspend(false)}
