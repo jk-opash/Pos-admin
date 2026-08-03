@@ -26,7 +26,11 @@ const BUSINESS_TYPES = [
   "Custom Business",
 ].map((t) => ({ label: t, value: t.toLowerCase().replace(/ /g, "_") }));
 
-export function StepBusinessDetails() {
+interface StepBusinessDetailsProps {
+  errors?: Record<string, string>;
+}
+
+export function StepBusinessDetails({ errors }: StepBusinessDetailsProps) {
   const dispatch = useAppDispatch();
   const { onboardingForm } = useAppSelector((state: any) => state.business);
 
@@ -49,6 +53,7 @@ export function StepBusinessDetails() {
           placeholder="e.g. Desai Foods & Catering"
           value={onboardingForm.name || ""}
           onChange={(e) => handleChange("name", e.target.value)}
+          error={errors?.name}
         />
         <Input
           label="Legal Business Name *"
@@ -61,6 +66,7 @@ export function StepBusinessDetails() {
           placeholder="e.g. desai-foods"
           value={onboardingForm.slug || ""}
           onChange={(e) => handleChange("slug", e.target.value)}
+          error={errors?.slug}
         />
         <Select
           label="Business Type *"
@@ -81,18 +87,21 @@ export function StepBusinessDetails() {
           placeholder="+91 9876543210"
           value={onboardingForm.phone || ""}
           onChange={(e) => handleChange("phone", e.target.value)}
+          error={errors?.phone}
         />
         <Input
           label="Support Email"
           placeholder="support@business.com"
           value={onboardingForm.email || ""}
           onChange={(e) => handleChange("email", e.target.value)}
+          error={errors?.email}
         />
         <Input
           label="Website (Optional)"
           placeholder="https://..."
           value={onboardingForm.website || ""}
           onChange={(e) => handleChange("website", e.target.value)}
+          error={errors?.website}
         />
         <Input
           label="Owner Date of Birth (Optional)"

@@ -14,6 +14,7 @@ import {
   fetchSubscriptions,
 } from "@/store/slices/subscriptionSlice";
 import { SubscriptionPlan } from "@/types";
+import { toast } from "react-toastify";
 
 export default function EditPlanPage({
   params,
@@ -23,6 +24,7 @@ export default function EditPlanPage({
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const resolvedParams = use(params);
   const { id } = resolvedParams;
 
@@ -54,6 +56,38 @@ export default function EditPlanPage({
     setIsSaving(true);
 
     const formData = new FormData(e.currentTarget);
+    const rawAmount = formData.get("amount") as string;
+    const rawMaxBranches = formData.get("max_branches") as string;
+    const rawMaxTeamMembers = formData.get("max_team_members") as string;
+
+    const newErrors: Record<string, string> = {};
+    if (!rawAmount || isNaN(Number(rawAmount)) || Number(rawAmount) < 0) {
+      newErrors.amount = "Amount must be a positive number or 0";
+    }
+    if (
+      !rawMaxBranches ||
+      isNaN(Number(rawMaxBranches)) ||
+      Number(rawMaxBranches) < 0
+    ) {
+      newErrors.max_branches = "Must be a valid number (use 0 for unlimited)";
+    }
+    if (
+      !rawMaxTeamMembers ||
+      isNaN(Number(rawMaxTeamMembers)) ||
+      Number(rawMaxTeamMembers) < 0
+    ) {
+      newErrors.max_team_members =
+        "Must be a valid number (use 0 for unlimited)";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fill all required fields correctly.");
+      setIsSaving(false);
+      return;
+    }
+    setErrors({});
+
     const data = {
       plan: formData.get("plan") as string,
       status: formData.get("status") as string,
@@ -99,7 +133,7 @@ export default function EditPlanPage({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 pb-12 max-w-5xl mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 pb-12  mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -140,187 +174,155 @@ export default function EditPlanPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Left Sidebar (Navigation / Jump Links) */}
-        <div className="hidden lg:block lg:col-span-1">
-          <div className="sticky top-6 space-y-1">
-            <h3 className="text-xs font-bold text-brand-placeholder uppercase tracking-wider mb-4 px-3">
-              Sections
-            </h3>
-            <a
-              href="#basic-info"
-              className="block px-3 py-2 text-sm font-semibold text-brand-primary bg-brand-primaryLight rounded-lg"
-            >
-              Basic Information
-            </a>
-            <a
-              href="#pricing"
-              className="block px-3 py-2 text-sm font-medium text-brand-muted hover:text-brand-dark hover:bg-slate-100 rounded-lg"
-            >
-              Pricing & Billing
-            </a>
-            <a
-              href="#limits"
-              className="block px-3 py-2 text-sm font-medium text-brand-muted hover:text-brand-dark hover:bg-slate-100 rounded-lg"
-            >
-              Resource Limits
-            </a>
-            <a
-              href="#renewal"
-              className="block px-3 py-2 text-sm font-medium text-brand-muted hover:text-brand-dark hover:bg-slate-100 rounded-lg"
-            >
-              Renewal Settings
-            </a>
+      {/* Right Content Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Section: Basic Info */}
+        <div
+          id="basic-info"
+          className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
+        >
+          <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
+            <h2 className="font-bold text-brand-dark">Basic Information</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select
+                label="Plan Name *"
+                name="plan"
+                defaultValue={initialData?.plan}
+                options={[
+                  { label: "Free Trial", value: "free trial" },
+                  { label: "Starter", value: "starter" },
+                  { label: "Growth", value: "growth" },
+                  { label: "Professional", value: "professional" },
+                  { label: "Enterprise", value: "enterprise" },
+                ]}
+              />
+              <Select
+                label="Status *"
+                name="status"
+                defaultValue={initialData?.status}
+                options={[
+                  { label: "Active", value: "active" },
+                  { label: "Trialing", value: "trialing" },
+                  { label: "Draft", value: "draft" },
+                ]}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Right Content Area */}
-        <div className="lg:col-span-3 space-y-8">
-          {/* Section: Basic Info */}
-          <div
-            id="basic-info"
-            className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
-          >
-            <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
-              <h2 className="font-bold text-brand-dark">Basic Information</h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select
-                  label="Plan Name *"
-                  name="plan"
-                  defaultValue={initialData?.plan}
-                  options={[
-                    { label: "Free Trial", value: "free_trial" },
-                    { label: "Starter", value: "starter" },
-                    { label: "Growth", value: "growth" },
-                    { label: "Professional", value: "professional" },
-                    { label: "Enterprise", value: "enterprise" },
-                  ]}
-                />
-                <Select
-                  label="Status *"
-                  name="status"
-                  defaultValue={initialData?.status}
-                  options={[
-                    { label: "Active", value: "active" },
-                    { label: "Trialing", value: "trialing" },
-                    { label: "Draft", value: "draft" },
-                  ]}
-                />
-              </div>
+        {/* Section: Pricing & Billing */}
+        <div
+          id="pricing"
+          className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
+        >
+          <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
+            <h2 className="font-bold text-brand-dark">Pricing & Billing</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Select
+                label="Currency *"
+                name="currency"
+                defaultValue={initialData?.currency || "INR"}
+                options={[
+                  { label: "INR (₹)", value: "INR" },
+                  { label: "USD ($)", value: "USD" },
+                  { label: "AED (د.إ)", value: "AED" },
+                  { label: "EUR (€)", value: "EUR" },
+                  { label: "GBP (£)", value: "GBP" },
+                ]}
+              />
+              <Select
+                label="Billing Cycle *"
+                name="billing_cycle"
+                defaultValue={initialData?.billing_cycle || "yearly"}
+                options={[{ label: "Yearly", value: "yearly" }]}
+              />
+              <Input
+                label="Amount / Price *"
+                name="amount"
+                type="number"
+                placeholder="0.00"
+                defaultValue={initialData?.amount}
+                error={errors.amount}
+              />
             </div>
           </div>
+        </div>
 
-          {/* Section: Pricing & Billing */}
-          <div
-            id="pricing"
-            className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
-          >
-            <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
-              <h2 className="font-bold text-brand-dark">Pricing & Billing</h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Select
-                  label="Currency *"
-                  name="currency"
-                  defaultValue={initialData?.currency || "INR"}
-                  options={[
-                    { label: "INR (₹)", value: "INR" },
-                    { label: "USD ($)", value: "USD" },
-                    { label: "AED (د.إ)", value: "AED" },
-                    { label: "EUR (€)", value: "EUR" },
-                    { label: "GBP (£)", value: "GBP" },
-                  ]}
-                />
-                <Select
-                  label="Billing Cycle *"
-                  name="billing_cycle"
-                  defaultValue={initialData?.billing_cycle || "yearly"}
-                  options={[{ label: "Yearly", value: "yearly" }]}
-                />
-                <Input
-                  label="Amount / Price *"
-                  name="amount"
-                  type="number"
-                  placeholder="0.00"
-                  defaultValue={initialData?.amount}
-                />
-              </div>
+        {/* Section: Resource Limits */}
+        <div
+          id="limits"
+          className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
+        >
+          <div className="px-6 py-4 border-b border-brand-border bg-brand-light flex justify-between items-center">
+            <h2 className="font-bold text-brand-dark">Resource Limits</h2>
+            <Badge variant="muted">Use 0 for None</Badge>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <Input
+                label="Max Branches"
+                name="max_branches"
+                type="number"
+                defaultValue={initialData?.max_branches || 1}
+                error={errors.max_branches}
+              />
+              <Input
+                label="Max Employees / Users"
+                name="max_team_members"
+                type="number"
+                defaultValue={initialData?.max_team_members || 5}
+                error={errors.max_team_members}
+              />
             </div>
           </div>
+        </div>
 
-          {/* Section: Resource Limits */}
-          <div
-            id="limits"
-            className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
-          >
-            <div className="px-6 py-4 border-b border-brand-border bg-brand-light flex justify-between items-center">
-              <h2 className="font-bold text-brand-dark">Resource Limits</h2>
-              <Badge variant="muted">Use 0 for None</Badge>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <Input
-                  label="Max Branches"
-                  name="max_branches"
-                  type="number"
-                  defaultValue={initialData?.max_branches || 1}
-                />
-                <Input
-                  label="Max Employees / Users"
-                  name="max_team_members"
-                  type="number"
-                  defaultValue={initialData?.max_team_members || 5}
-                />
-              </div>
-            </div>
+        {/* Section: Renewal Settings */}
+        <div
+          id="renewal"
+          className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
+        >
+          <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
+            <h2 className="font-bold text-brand-dark">Renewal Settings</h2>
           </div>
-
-          {/* Section: Renewal Settings */}
-          <div
-            id="renewal"
-            className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
-          >
-            <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
-              <h2 className="font-bold text-brand-dark">Renewal Settings</h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    name="auto_renew"
-                    defaultChecked={initialData?.auto_renew ?? true}
-                    className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-brand-dark block">
-                      Auto Renew
-                    </span>
-                    <span className="text-xs text-brand-muted">
-                      Automatically renew plan at period end
-                    </span>
-                  </div>
-                </label>
-                <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    name="cancel_at_period_end"
-                    defaultChecked={initialData?.cancel_at_period_end ?? false}
-                    className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-brand-dark block">
-                      Cancel at Period End
-                    </span>
-                    <span className="text-xs text-brand-muted">
-                      Terminate subscription when cycle ends
-                    </span>
-                  </div>
-                </label>
-              </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  name="auto_renew"
+                  defaultChecked={initialData?.auto_renew ?? true}
+                  className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
+                />
+                <div>
+                  <span className="text-sm font-medium text-brand-dark block">
+                    Auto Renew
+                  </span>
+                  <span className="text-xs text-brand-muted">
+                    Automatically renew plan at period end
+                  </span>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  name="cancel_at_period_end"
+                  defaultChecked={initialData?.cancel_at_period_end ?? false}
+                  className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
+                />
+                <div>
+                  <span className="text-sm font-medium text-brand-dark block">
+                    Cancel at Period End
+                  </span>
+                  <span className="text-xs text-brand-muted">
+                    Terminate subscription when cycle ends
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
         </div>

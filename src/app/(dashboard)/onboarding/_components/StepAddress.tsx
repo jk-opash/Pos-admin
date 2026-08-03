@@ -3,7 +3,11 @@ import { Select } from "@/components/ui/Select";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { updateOnboardingForm } from "@/store/slices/businessSlice";
 
-export function StepAddress() {
+interface StepAddressProps {
+  errors?: Record<string, string>;
+}
+
+export function StepAddress({ errors }: StepAddressProps) {
   const dispatch = useAppDispatch();
   const { onboardingForm } = useAppSelector((state: any) => state.business);
 
@@ -27,6 +31,7 @@ export function StepAddress() {
           ]}
           value={onboardingForm.country || "India"}
           onChange={(e) => handleChange("country", e.target.value)}
+          error={errors?.country}
         />
         <Select
           label="State / Province *"
@@ -40,18 +45,21 @@ export function StepAddress() {
           ]}
           value={onboardingForm.state || ""}
           onChange={(e) => handleChange("state", e.target.value)}
+          error={errors?.state}
         />
         <Input
           label="City *"
           placeholder="e.g. Mumbai"
           value={onboardingForm.city || ""}
           onChange={(e) => handleChange("city", e.target.value)}
+          error={errors?.city}
         />
         <Input
           label="Postal / PIN Code *"
           placeholder="e.g. 400001"
           value={onboardingForm.pincode || ""}
           onChange={(e) => handleChange("pincode", e.target.value)}
+          error={errors?.pincode}
         />
       </div>
       <div>
@@ -59,12 +67,13 @@ export function StepAddress() {
           Address Line 1 *
         </label>
         <textarea
-          className="w-full rounded-lg border border-brand-border px-3 py-2.5 text-sm text-brand-dark focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary placeholder-brand-placeholder"
+          className={`w-full rounded-lg border px-3 py-2.5 text-sm text-brand-dark focus:outline-none focus:ring-1 focus:ring-brand-primary placeholder-brand-placeholder ${errors?.address_line1 ? "border-brand-danger focus:border-brand-danger focus:ring-brand-danger/20 bg-red-50/30" : "border-brand-border focus:border-brand-primary"}`}
           rows={2}
           placeholder="Street address, company name, c/o"
           value={onboardingForm.address_line1 || ""}
           onChange={(e) => handleChange("address_line1", e.target.value)}
         />
+        {errors?.address_line1 && <p className="text-xs font-medium text-brand-danger mt-1.5">{errors.address_line1}</p>}
       </div>
       <div>
         <label className="text-sm font-medium text-brand-muted mb-1.5 block">

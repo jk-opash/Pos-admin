@@ -25,7 +25,6 @@ import { SupportSnapshot } from "./_components/SupportSnapshot";
 import { Button } from "@/components/ui/Button";
 import { cn, formatDate } from "@/lib/utils";
 import { ActivityItem, DashboardStats } from "@/types";
-import { mockDashboardStats } from "@/lib/mock/dashboard-stats";
 import { colors } from "@/config/colors";
 import { Calendar as CalendarIcon, Download, Filter } from "lucide-react";
 
@@ -181,7 +180,7 @@ export default function DashboardPage() {
             planColorPalette[name] ||
             fallbackColors[index % fallbackColors.length],
         }))
-      : mockDashboardStats.planDistribution;
+      : [];
 
   // Geographic distribution
   const geoMap: Record<string, number> = {};
@@ -250,7 +249,26 @@ export default function DashboardPage() {
     .reduce((acc, inv: any) => acc + Number(inv.amount || 0), 0);
 
   const stats: DashboardStats = {
-    ...mockDashboardStats,
+    subscriptionRevenue: 0,
+    trialBusinesses: 0,
+    suspendedBusinesses: 0,
+    expiredBusinesses: 0,
+    deletedBusinesses: 0,
+    totalBranches: 0,
+    offlineUsers: 0,
+    totalEmployees: 0,
+    newUsersThisMonth: 0,
+    totalCustomers: 0,
+    totalPosTransactions: 0,
+    newSignupsThisMonth: 0,
+    churnedThisMonth: 0,
+    conversionRate: 0,
+    arpu: 0,
+    arpb: 0,
+    expiredSubscriptions: 0,
+    trialPlans: 0,
+    yearlyPlans: 0,
+    renewalsToday: 0,
     totalBusinesses,
     activeBusinesses,
     pendingApprovalBusinesses,
@@ -337,18 +355,6 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-brand-muted">
             Real-time overview of the POS SaaS platform.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2 h-9 text-sm">
-            <CalendarIcon className="h-4 w-4" /> This Month
-          </Button>
-          <Button variant="outline" className="gap-2 h-9 text-sm">
-            <Filter className="h-4 w-4" /> Filters
-          </Button>
-          <Button variant="outline" className="gap-2 h-9 text-sm">
-            <Download className="h-4 w-4" /> Export
-          </Button>
         </div>
       </div>
 

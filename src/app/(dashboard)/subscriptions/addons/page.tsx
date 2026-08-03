@@ -15,7 +15,14 @@ import {
   TableRow,
 } from "@/components/ui/Table";
 import { Badge } from "@/components/ui/Badge";
-import { Store, Users, Search, PlusCircle, CreditCard } from "lucide-react";
+import {
+  Store,
+  Users,
+  Search,
+  PlusCircle,
+  CreditCard,
+  ArrowLeft,
+} from "lucide-react";
 import { AddonModal } from "./_components/AddonModal";
 import Link from "next/link";
 
@@ -64,19 +71,18 @@ export default function AddonsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <Link
+            href="/subscriptions"
+            className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-dark mb-2 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Subscriptions
+          </Link>
           <h1 className="text-2xl font-bold text-brand-dark flex items-center gap-2">
             Purchase Add-ons
           </h1>
           <p className="mt-1 text-sm text-brand-muted">
             Manage and purchase extra branches and staff members for businesses.
           </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/subscriptions">
-            <Button variant="outline" className="gap-2">
-              Back to Overview
-            </Button>
-          </Link>
         </div>
       </div>
 

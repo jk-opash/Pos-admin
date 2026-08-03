@@ -30,10 +30,24 @@ api.interceptors.request.use(
   },
 );
 
-// Add a response interceptor to handle 401 Unauthorized globally
+import { toast } from "react-toastify";
+
+// Add a response interceptor to handle 401 Unauthorized globally and toasts
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const method = response.config?.method?.toUpperCase();
+    if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+      toast.success(response.data?.message || "Operation successful");
+    }
+    return response;
+  },
   (error) => {
+    const method = error.config?.method?.toUpperCase();
+    if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Operation failed";
+      toast.error(errorMsg);
+    }
+    
     if (error.response && error.response.status === 401) {
       if (typeof window !== "undefined") {
         // Clear local storage auth data

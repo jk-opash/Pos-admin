@@ -10,6 +10,7 @@ import { StepTaxCompliance } from "./StepTaxCompliance";
 import { StepSubscription } from "./StepSubscription";
 import { StepPayment } from "./StepPayment";
 import { StepReview } from "./StepReview";
+import { toast } from "react-toastify";
 import {
   ChevronLeft,
   ChevronRight,
@@ -40,6 +41,7 @@ export function OnboardingWizardFull() {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Smooth transition effect between steps
   const changeStep = (newStep: number) => {
@@ -50,7 +52,59 @@ export function OnboardingWizardFull() {
     }, 300);
   };
 
+  const validateStep = (step: number): Record<string, string> => {
+    const newErrors: Record<string, string> = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\+?[0-9\s\-]{10,15}$/;
+    const slugRegex = /^[a-z0-9-]+$/;
+
+    if (step === 0) {
+      if (!onboardingForm.ownerName) newErrors.ownerName = "Name is required";
+      if (!onboardingForm.ownerPhone) newErrors.ownerPhone = "Phone is required";
+      else if (!phoneRegex.test(onboardingForm.ownerPhone)) newErrors.ownerPhone = "Invalid phone format";
+      if (!onboardingForm.ownerEmail) newErrors.ownerEmail = "Email is required";
+      else if (!emailRegex.test(onboardingForm.ownerEmail)) newErrors.ownerEmail = "Invalid email format";
+      if (!onboardingForm.ownerPassword) newErrors.ownerPassword = "Password is required";
+      else if (onboardingForm.ownerPassword.length < 8) newErrors.ownerPassword = "Password must be at least 8 characters";
+    } else if (step === 1) {
+      if (!onboardingForm.name) newErrors.name = "Business name is required";
+      if (!onboardingForm.slug) newErrors.slug = "Business slug is required";
+      else if (!slugRegex.test(onboardingForm.slug)) newErrors.slug = "Only lowercase letters, numbers, hyphens allowed";
+      if (!onboardingForm.phone) newErrors.phone = "Phone is required";
+      else if (!phoneRegex.test(onboardingForm.phone)) newErrors.phone = "Invalid phone format";
+      if (!onboardingForm.email) newErrors.email = "Email is required";
+      else if (!emailRegex.test(onboardingForm.email)) newErrors.email = "Invalid email format";
+      if (onboardingForm.website && !/^https?:\/\//.test(onboardingForm.website)) {
+        newErrors.website = "Must start with http:// or https://";
+      }
+    } else if (step === 3) {
+      if (!onboardingForm.address_line1) newErrors.address_line1 = "Address is required";
+      if (!onboardingForm.city) newErrors.city = "City is required";
+      if (!onboardingForm.state) newErrors.state = "State is required";
+      if (!onboardingForm.country) newErrors.country = "Country is required";
+      if (!onboardingForm.pincode) newErrors.pincode = "Pincode is required";
+    } else if (step === 4) {
+      if (onboardingForm.gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/.test(onboardingForm.gstin)) {
+        newErrors.gstin = "Invalid GSTIN format";
+      }
+      if (onboardingForm.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(onboardingForm.pan)) {
+        newErrors.pan = "Invalid PAN format";
+      }
+    } else if (step === 5) {
+      if (!onboardingForm.subscriptionPlanId) newErrors.subscriptionPlanId = "Please select a plan";
+    }
+
+    return newErrors;
+  };
+
   const handleNext = () => {
+    const stepErrors = validateStep(currentStep);
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
+      toast.error("Please fill all required fields correctly.");
+      return;
+    }
+    setErrors({});
     if (currentStep < STEPS.length - 1) changeStep(currentStep + 1);
   };
 
@@ -166,11 +220,11 @@ export function OnboardingWizardFull() {
 
             {/* Scrollable area */}
             <div className="flex-1 overflow-y-auto pr-3 -mr-3 custom-scrollbar">
-              {currentStep === 0 && <StepPersonalInfo />}
-              {currentStep === 1 && <StepBusinessDetails />}
+              {currentStep === 0 && <StepPersonalInfo errors={errors} />}
+              {currentStep === 1 && <StepBusinessDetails errors={errors} />}
               {currentStep === 2 && <StepIndustryTemplate />}
-              {currentStep === 3 && <StepAddress />}
-              {currentStep === 4 && <StepTaxCompliance />}
+              {currentStep === 3 && <StepAddress errors={errors} />}
+              {currentStep === 4 && <StepTaxCompliance errors={errors} />}
               {currentStep === 5 && <StepSubscription />}
               {currentStep === 6 && <StepPayment />}
               {currentStep === 7 && <StepReview />}

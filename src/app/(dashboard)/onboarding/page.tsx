@@ -20,7 +20,7 @@ export default function OnboardingPage() {
     "requests",
   );
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "draft" | "pending" | "completed"
+    "all" | "draft" | "completed"
   >("all");
 
   useEffect(() => {
@@ -30,9 +30,6 @@ export default function OnboardingPage() {
   const stats = {
     total: onboardingRequests.length,
     drafts: onboardingRequests.filter((r: any) => r.status === "draft").length,
-    pending: onboardingRequests.filter(
-      (r: any) => r.status === "pending_review" || r.status === "pending",
-    ).length,
     completed: onboardingRequests.filter(
       (r: any) => r.status === "completed" || r.status === "approved",
     ).length,
@@ -41,8 +38,6 @@ export default function OnboardingPage() {
   const filtered = onboardingRequests.filter((req: any) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "draft") return req.status === "draft";
-    if (statusFilter === "pending")
-      return req.status === "pending_review" || req.status === "pending";
     if (statusFilter === "completed")
       return req.status === "completed" || req.status === "approved";
     return true;
@@ -85,12 +80,6 @@ export default function OnboardingPage() {
           trend={{ value: 3, label: "abandoned", positive: false }}
         />
         <StatsCard
-          title="Pending Review"
-          value={stats.pending}
-          icon={<span className="text-amber-500 font-bold text-lg">⚠</span>}
-          trend={{ value: 1, label: "needs action", positive: false }}
-        />
-        <StatsCard
           title="Successfully Provisioned"
           value={stats.completed}
           icon={<span className="text-emerald-500 font-bold text-lg">✓</span>}
@@ -127,21 +116,19 @@ export default function OnboardingPage() {
           {/* Status Filter Tabs */}
           <div className="border-b border-brand-border px-6">
             <nav className="-mb-px flex space-x-6">
-              {(["all", "draft", "pending", "completed"] as const).map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setStatusFilter(tab)}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 text-sm font-medium transition-colors capitalize ${
-                      statusFilter === tab
-                        ? "border-brand-dark text-brand-dark"
-                        : "border-transparent text-brand-muted hover:text-brand-dark"
-                    }`}
-                  >
-                    {tab === "pending" ? "Pending Review" : tab}
-                  </button>
-                ),
-              )}
+              {(["all", "draft", "completed"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setStatusFilter(tab)}
+                  className={`whitespace-nowrap py-4 px-1 border-b-2 text-sm font-medium transition-colors capitalize ${
+                    statusFilter === tab
+                      ? "border-brand-dark text-brand-dark"
+                      : "border-transparent text-brand-muted hover:text-brand-dark"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </nav>
           </div>
 

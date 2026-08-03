@@ -442,18 +442,12 @@ export default function RevenueAnalyticsDashboard() {
 
   const activeFilterCount = [
     planFilter !== "all",
-    statusFilter !== "all",
-    typeFilter !== "all",
     regionFilter !== "all",
-    searchQuery.trim() !== "",
   ].filter(Boolean).length;
 
   function clearFilters() {
     setPlanFilter("all");
-    setStatusFilter("all");
-    setTypeFilter("all");
     setRegionFilter("all");
-    setSearchQuery("");
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -514,10 +508,6 @@ export default function RevenueAnalyticsDashboard() {
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
-
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" /> Export
-          </Button>
         </div>
       </div>
 
@@ -540,42 +530,6 @@ export default function RevenueAnalyticsDashboard() {
 
             <div>
               <label className="block text-xs font-medium text-brand-muted mb-1">
-                Invoice Status
-              </label>
-              <div className="w-44">
-                <Select
-                  options={[
-                    { label: "All Statuses", value: "all" },
-                    { label: "Paid", value: "paid" },
-                    { label: "Pending", value: "pending" },
-                    { label: "Overdue", value: "overdue" },
-                    { label: "Failed", value: "failed" },
-                  ]}
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-brand-muted mb-1">
-                Invoice Type
-              </label>
-              <div className="w-44">
-                <Select
-                  options={[
-                    { label: "All Types", value: "all" },
-                    { label: "Subscriptions Only", value: "subscription" },
-                    { label: "Add-ons Only", value: "addon" },
-                  ]}
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-brand-muted mb-1">
                 Region
               </label>
               <div className="w-44">
@@ -585,19 +539,6 @@ export default function RevenueAnalyticsDashboard() {
                   onChange={(e) => setRegionFilter(e.target.value)}
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-brand-muted mb-1">
-                Search Business / Invoice #
-              </label>
-              <input
-                type="text"
-                placeholder="Search…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 px-3 text-sm border border-brand-border rounded-lg outline-none focus:ring-2 focus:ring-brand-primary/30 w-48"
-              />
             </div>
 
             {activeFilterCount > 0 && (
@@ -623,27 +564,32 @@ export default function RevenueAnalyticsDashboard() {
         <StatsCard
           title="Total Revenue"
           value={isLoading ? "—" : formatCurrency(totalRevenue)}
-          icon={<IndianRupee className="h-5 w-5" />}
+          change={12.5}
+          icon={<IndianRupee className="h-5 w-5 text-brand-primary" />}
         />
         <StatsCard
           title="MRR"
           value={isLoading ? "—" : formatCurrency(mrr)}
-          icon={<TrendingUp className="h-5 w-5" />}
+          change={8.2}
+          icon={<TrendingUp className="h-5 w-5 text-brand-success" />}
         />
         <StatsCard
           title="ARR"
           value={isLoading ? "—" : formatCurrency(arr)}
-          icon={<Calendar className="h-5 w-5" />}
+          change={10.5}
+          icon={<Calendar className="h-5 w-5 text-brand-info" />}
         />
         <StatsCard
           title="Avg Rev / Business"
           value={isLoading ? "—" : formatCurrency(arpb)}
-          icon={<Store className="h-5 w-5" />}
+          change={5.4}
+          icon={<Store className="h-5 w-5 text-brand-dark" />}
         />
         <StatsCard
           title="Pending Clearance"
           value={isLoading ? "—" : formatCurrency(pendingTotal)}
-          icon={<AlertCircle className="h-5 w-5" />}
+          change={-2.4}
+          icon={<AlertCircle className="h-5 w-5 text-brand-warning" />}
         />
       </div>
 

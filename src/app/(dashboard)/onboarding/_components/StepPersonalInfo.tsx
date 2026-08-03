@@ -5,7 +5,11 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { updateOnboardingForm } from "@/store/slices/businessSlice";
 import { DocumentUploadItem } from "./DocumentUploadItem";
 
-export function StepPersonalInfo() {
+interface StepPersonalInfoProps {
+  errors?: Record<string, string>;
+}
+
+export function StepPersonalInfo({ errors }: StepPersonalInfoProps) {
   const dispatch = useAppDispatch();
   const { onboardingForm } = useAppSelector((state: any) => state.business);
 
@@ -21,18 +25,21 @@ export function StepPersonalInfo() {
           placeholder="e.g. Arjun Desai"
           value={onboardingForm.ownerName}
           onChange={(e) => handleChange("ownerName", e.target.value)}
+          error={errors?.ownerName}
         />
         <Input
           label="Mobile Number *"
           placeholder="+91 99123 45678"
           value={onboardingForm.ownerPhone}
           onChange={(e) => handleChange("ownerPhone", e.target.value)}
+          error={errors?.ownerPhone}
         />
         <Input
           label="Email Address *"
           placeholder="arjun@business.com"
           value={onboardingForm.ownerEmail}
           onChange={(e) => handleChange("ownerEmail", e.target.value)}
+          error={errors?.ownerEmail}
         />
 
         <Input
@@ -41,6 +48,7 @@ export function StepPersonalInfo() {
           placeholder="Min 8 characters"
           value={onboardingForm.ownerPassword || ""}
           onChange={(e) => handleChange("ownerPassword", e.target.value)}
+          error={errors?.ownerPassword}
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

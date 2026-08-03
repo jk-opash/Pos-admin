@@ -8,9 +8,9 @@ import { Payment, PaymentStatus } from "@/types";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { Pagination } from "@/components/ui/Pagination";
 import { Search, Plus, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { mockPayments } from "@/lib/mock/payments";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchInvoices } from "@/store/slices/subscriptionSlice";
 
@@ -18,6 +18,8 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -78,6 +80,18 @@ export default function PaymentsPage() {
     return matchesSearch && matchesStatus;
   });
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    const timeout = setTimeout(() => setCurrentPage(1), 0);
+    return () => clearTimeout(timeout);
+  }, [searchTerm, statusFilter]);
+
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const paginatedPayments = filteredPayments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
   // Calculate totals
   const totalVolume = filteredPayments
     .filter((p) => p.status === "success")
@@ -85,7 +99,7 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-brand-dark">
             Payments & Transactions
@@ -94,13 +108,18 @@ export default function PaymentsPage() {
             View and manage all subscription payments across the platform.
           </p>
         </div>
-        <div className="flex flex-col items-end">
-          <p className="text-xs text-brand-muted">
-            Filtered Volume (Succeeded)
-          </p>
-          <p className="text-2xl font-bold text-brand-success">
-            {formatCurrency(totalVolume)}
-          </p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          <div className="flex flex-col items-start sm:items-end">
+            <p className="text-xs text-brand-muted uppercase tracking-wider font-semibold">
+              Filtered Volume (Succeeded)
+            </p>
+            <p className="text-2xl font-bold text-brand-success leading-none mt-1.5">
+              {formatCurrency(totalVolume)}
+            </p>
+          </div>
+          <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" /> Add Payment
+          </Button>
         </div>
       </div>
 
@@ -113,21 +132,26 @@ export default function PaymentsPage() {
             icon={<Search className="h-4 w-4" />}
           />
         </div>
-        <div className="w-full sm:w-40">
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            options={[
-              { label: "All Statuses", value: "all" },
-              { label: "Succeeded", value: "succeeded" },
-              { label: "Failed", value: "failed" },
-              { label: "Refunded", value: "refunded" },
-            ]}
-          />
-        </div>
       </div>
 
-      <PaymentTable data={filteredPayments} onViewPayment={handleViewPayment} />
+      <PaymentTable
+        data={paginatedPayments}
+        onViewPayment={handleViewPayment}
+      />
+
+      <div className="mt-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(size) => {
+            setItemsPerPage(size);
+            setCurrentPage(1); // Reset to page 1 on page size change
+          }}
+          totalItems={filteredPayments.length}
+        />
+      </div>
 
       <PaymentDetailsModal
         isOpen={isDetailsModalOpen}
@@ -140,16 +164,6 @@ export default function PaymentsPage() {
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddPayment}
       />
-
-      {/* Floating Action Button */}
-      <Button
-        variant="primary"
-        className="fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all z-50 p-0 flex items-center justify-center"
-        onClick={() => setIsAddModalOpen(true)}
-        title="Add Payment"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
     </div>
   );
 }

@@ -481,10 +481,7 @@ export interface BusinessVerification {
 
 export type OnboardingStatus =
   | "draft"
-  | "pending_review"
   | "approved"
-  | "rejected"
-  | "provisioning"
   | "completed";
 
 export interface OnboardingRequest {

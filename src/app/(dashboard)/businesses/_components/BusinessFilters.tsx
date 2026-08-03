@@ -1,13 +1,9 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useState } from "react";
-
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { Button } from "@/components/ui/Button";
-import { Search, Filter, Plus } from "lucide-react";
-import Link from "next/link";
+import { Search } from "lucide-react";
 
 interface FiltersProps {
   searchTerm: string;
@@ -34,8 +30,6 @@ export function BusinessFilters({
   stateFilter,
   setStateFilter,
 }: FiltersProps) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -48,7 +42,7 @@ export function BusinessFilters({
               icon={<Search className="h-4 w-4" />}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
+          <div className="grid grid-cols-3 gap-3 w-full sm:w-auto">
             <div className="w-full sm:w-36">
               <Select
                 value={statusFilter}
@@ -56,9 +50,7 @@ export function BusinessFilters({
                 options={[
                   { label: "All Statuses", value: "all" },
                   { label: "Active", value: "active" },
-                  { label: "Trialing", value: "trial" },
                   { label: "Suspended", value: "suspended" },
-                  { label: "Pending KYC", value: "pending" },
                 ]}
               />
             </div>
@@ -69,36 +61,11 @@ export function BusinessFilters({
                 options={[
                   { label: "All Industries", value: "all" },
                   { label: "Restaurant", value: "restaurant" },
-                  { label: "Retail", value: "retail" },
-                  { label: "Grocery", value: "grocery" },
-                  { label: "Pharmacy", value: "pharmacy" },
-                  { label: "Salon", value: "salon" },
-                  { label: "Hotel", value: "hotel" },
+                  { label: "Cafe", value: "cafe" },
                 ]}
               />
             </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Button
-            variant={showAdvanced ? "primary" : "secondary"}
-            className="flex-1 sm:flex-initial gap-2 justify-center"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-          >
-            <Filter className="h-4 w-4" />
-            More Filters
-          </Button>
-        </div>
-      </div>
-
-      {showAdvanced && (
-        <div className="p-4 border border-brand-border rounded-xl bg-brand-light animate-in fade-in slide-in-from-top-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="text-xs font-semibold text-brand-muted mb-1.5 block">
-                Subscription Plan
-              </label>
               <Select
                 value={planFilter}
                 onChange={(e) => setPlanFilter(e.target.value)}
@@ -112,45 +79,9 @@ export function BusinessFilters({
                 ]}
               />
             </div>
-            <div>
-              <label className="text-xs font-semibold text-brand-muted mb-1.5 block">
-                State / Region
-              </label>
-              <Select
-                value={stateFilter}
-                onChange={(e) => setStateFilter(e.target.value)}
-                options={[
-                  { label: "All Regions", value: "all" },
-                  { label: "Maharashtra", value: "Maharashtra" },
-                  { label: "Karnataka", value: "Karnataka" },
-                  { label: "Delhi", value: "Delhi" },
-                  { label: "Kerala", value: "Kerala" },
-                  { label: "Tamil Nadu", value: "Tamil Nadu" },
-                  { label: "Gujarat", value: "Gujarat" },
-                  { label: "Haryana", value: "Haryana" },
-                  { label: "Telangana", value: "Telangana" },
-                  { label: "West Bengal", value: "West Bengal" },
-                ]}
-              />
-            </div>
-            <div className="flex items-end">
-              <Button
-                variant="outline"
-                className="w-full text-sm text-brand-muted"
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("all");
-                  setTypeFilter("all");
-                  setPlanFilter("all");
-                  setStateFilter("all");
-                }}
-              >
-                Clear All Filters
-              </Button>
-            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

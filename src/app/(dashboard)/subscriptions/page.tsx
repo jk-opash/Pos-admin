@@ -52,16 +52,20 @@ export default function SubscriptionsDashboard() {
   const activePlansMRR = businesses
     .filter((b) => b.status === "active" || b.status === "trial")
     .reduce((acc, b) => acc + Number(b.subscription_plan?.amount || 0), 0);
-    
+
   const paidAddonsTotal = invoices
-    .filter((i) => i.invoice_number?.startsWith("INV-ADDON-") && (i.status === "paid" || i.status === "success"))
+    .filter(
+      (i) =>
+        i.invoice_number?.startsWith("INV-ADDON-") &&
+        (i.status === "paid" || i.status === "success"),
+    )
     .reduce((acc, i) => acc + Number(i.amount || 0), 0);
 
   const paidInvoicesTotal = invoices
     .filter((i) => i.status === "paid" || i.status === "success")
     .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
 
-  const mrr = (activePlansMRR + paidAddonsTotal) || paidInvoicesTotal;
+  const mrr = activePlansMRR + paidAddonsTotal || paidInvoicesTotal;
   const arr = mrr * 12;
 
   const isLoading =
@@ -86,13 +90,11 @@ export default function SubscriptionsDashboard() {
             </Button>
           </Link>
           <Link href="/subscriptions/addons">
-            <Button variant="outline" className="gap-2 border-brand-primary text-brand-primary hover:bg-brand-primaryLight hover:text-brand-primaryDark transition-colors">
+            <Button
+              variant="outline"
+              className="gap-2 border-brand-primary text-brand-primary hover:bg-brand-primaryLight hover:text-brand-primaryDark transition-colors"
+            >
               <PlusCircle className="h-4 w-4" /> Buy Add-ons
-            </Button>
-          </Link>
-          <Link href="/subscriptions/billing">
-            <Button className="gap-2">
-              <FileText className="h-4 w-4" /> View Invoices
             </Button>
           </Link>
         </div>
@@ -181,22 +183,40 @@ export default function SubscriptionsDashboard() {
           {(() => {
             const monthlyRevenues = Array(12).fill(0);
             invoices.forEach((inv: any) => {
-              if (inv.status === 'paid' || inv.status === 'success') {
-                const invDate = new Date(inv.issued_at || inv.created_at || inv.paid_at);
+              if (inv.status === "paid" || inv.status === "success") {
+                const invDate = new Date(
+                  inv.issued_at || inv.created_at || inv.paid_at,
+                );
                 if (!isNaN(invDate.getTime())) {
-                  monthlyRevenues[invDate.getMonth()] += Number(inv.amount || 0);
+                  monthlyRevenues[invDate.getMonth()] += Number(
+                    inv.amount || 0,
+                  );
                 }
               }
             });
 
             const maxRevenue = Math.max(...monthlyRevenues, 1000);
-            const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const monthLabels = [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ];
 
             return (
               <>
                 <div className="h-64 flex items-end justify-between gap-2 px-2 border-b border-brand-border/60 pb-2">
                   {monthlyRevenues.map((val, i) => {
-                    const heightPercent = val > 0 ? (val / maxRevenue) * 100 : 4;
+                    const heightPercent =
+                      val > 0 ? (val / maxRevenue) * 100 : 4;
                     return (
                       <div
                         key={i}

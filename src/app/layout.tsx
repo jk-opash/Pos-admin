@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   description: "Universal Business Management Platform",
 };
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,6 +29,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <StoreProvider>{children}</StoreProvider>
+        <ToastContainer position="top-right" autoClose={3000} />
       </body>
     </html>
   );

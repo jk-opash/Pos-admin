@@ -1,12 +1,15 @@
-import { useState } from 'react';
-import { useAppDispatch } from '@/store/hooks';
-import { purchaseAddons, fetchInvoices } from '@/store/slices/subscriptionSlice';
-import { fetchBusinesses } from '@/store/slices/businessSlice';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Store, Users, DollarSign, Loader2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import { useAppDispatch } from "@/store/hooks";
+import {
+  purchaseAddons,
+  fetchInvoices,
+} from "@/store/slices/subscriptionSlice";
+import { fetchBusinesses } from "@/store/slices/businessSlice";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Store, Users, DollarSign, Loader2 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface AddonModalProps {
   isOpen: boolean;
@@ -19,7 +22,7 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
   const [branches, setBranches] = useState(0);
   const [teamMembers, setTeamMembers] = useState(0);
   const [amount, setAmount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('Card');
+  const [paymentMethod, setPaymentMethod] = useState("Card");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!business) return null;
@@ -27,36 +30,38 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (branches === 0 && teamMembers === 0) {
-      toast.error('Please add at least one branch or team member');
+      toast.error("Please add at least one branch or team member");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await dispatch(purchaseAddons({
-        business_id: business.id,
-        addons: {
-          branches: branches,
-          team_members: teamMembers
-        },
-        amount: amount,
-        currency: 'USD',
-        payment_method: paymentMethod
-      })).unwrap();
-      
-      toast.success('Add-ons purchased successfully!');
-      
+      await dispatch(
+        purchaseAddons({
+          business_id: business.id,
+          addons: {
+            branches: branches,
+            team_members: teamMembers,
+          },
+          amount: amount,
+          currency: "USD",
+          payment_method: paymentMethod,
+        }),
+      ).unwrap();
+
+      toast.success("Add-ons purchased successfully!");
+
       // Refresh data
       dispatch(fetchBusinesses());
       dispatch(fetchInvoices());
-      
+
       // Reset form
       setBranches(0);
       setTeamMembers(0);
       setAmount(0);
       onClose();
     } catch (err: any) {
-      toast.error(err || 'Failed to purchase add-ons');
+      toast.error(err || "Failed to purchase add-ons");
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +93,8 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
               />
             </div>
             <p className="mt-1 text-xs text-brand-muted">
-              Current limit: {business.subscription_plan?.max_branches || 0} (Base) + {business.extra_branches || 0} (Extra)
+              Current limit: {business.subscription_plan?.max_branches || 0}{" "}
+              (Base) + {business.extra_branches || 0} (Extra)
             </p>
           </div>
 
@@ -109,7 +115,8 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
               />
             </div>
             <p className="mt-1 text-xs text-brand-muted">
-              Current limit: {business.subscription_plan?.max_team_members || 0} (Base) + {business.extra_team_members || 0} (Extra)
+              Current limit: {business.subscription_plan?.max_team_members || 0}{" "}
+              (Base) + {business.extra_team_members || 0} (Extra)
             </p>
           </div>
 
@@ -132,7 +139,8 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
               />
             </div>
             <p className="mt-1 text-xs text-brand-muted">
-              This amount will be billed immediately and an invoice will be generated.
+              This amount will be billed immediately and an invoice will be
+              generated.
             </p>
           </div>
 
@@ -155,8 +163,13 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+        <div className="flex justify-end gap-3 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
@@ -166,7 +179,7 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
                 Processing...
               </>
             ) : (
-              'Purchase & Bill'
+              "Purchase & Bill"
             )}
           </Button>
         </div>

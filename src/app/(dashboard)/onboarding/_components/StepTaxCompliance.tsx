@@ -3,7 +3,11 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { updateOnboardingForm } from "@/store/slices/businessSlice";
 import { DocumentUploadItem } from "./DocumentUploadItem";
 
-export function StepTaxCompliance() {
+interface StepTaxComplianceProps {
+  errors?: Record<string, string>;
+}
+
+export function StepTaxCompliance({ errors }: StepTaxComplianceProps) {
   const dispatch = useAppDispatch();
   const { onboardingForm } = useAppSelector((state: any) => state.business);
 
@@ -19,12 +23,14 @@ export function StepTaxCompliance() {
           placeholder="e.g. 27ABCDE1234F1Z5"
           value={onboardingForm.gstin || ""}
           onChange={(e) => handleChange("gstin", e.target.value)}
+          error={errors?.gstin}
         />
         <Input
           label="PAN Number *"
           placeholder="e.g. ABCDE1234F"
           value={onboardingForm.pan || ""}
           onChange={(e) => handleChange("pan", e.target.value)}
+          error={errors?.pan}
         />
       </div>
 

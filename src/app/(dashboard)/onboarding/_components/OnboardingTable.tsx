@@ -18,10 +18,7 @@ const statusConfig: Record<
   }
 > = {
   draft: { label: "Draft", variant: "muted" },
-  pending_review: { label: "Pending Review", variant: "warning" },
   approved: { label: "Approved", variant: "success" },
-  rejected: { label: "Rejected", variant: "danger" },
-  provisioning: { label: "Provisioning", variant: "info" },
   completed: { label: "Completed", variant: "default" },
 };
 
