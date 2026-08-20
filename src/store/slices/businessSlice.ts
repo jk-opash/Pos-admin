@@ -144,6 +144,20 @@ export const fetchBusinessById = createAsyncThunk(
   }
 );
 
+export const resetBusinessOwnerPassword = createAsyncThunk(
+  'business/resetPassword',
+  async ({ id, newPassword }: { id: string, newPassword?: string }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/business/${id}/reset-password`, { newPassword });
+      return response.data; // { message: string, newPassword: string }
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.error || 'Failed to reset password'
+      );
+    }
+  }
+);
+
 export const updateBusiness = createAsyncThunk(
   'business/updateBusiness',
   async ({ id, data }: { id: string, data: any }, { rejectWithValue }) => {
@@ -157,7 +171,7 @@ export const updateBusiness = createAsyncThunk(
 );
 
 export const provisionBusiness = createAsyncThunk(
-  'business/provisionBusiness',
+  'business/provision',
   async (data: OnboardingFormState, { rejectWithValue }) => {
     try {
       const bName = data.businessName || data.name || '';
