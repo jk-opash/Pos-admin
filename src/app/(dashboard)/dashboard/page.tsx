@@ -7,6 +7,7 @@ import {
   fetchInvoices,
   fetchSubscriptions,
 } from "@/store/slices/subscriptionSlice";
+import { fetchAuditLogs } from "@/store/slices/auditLogSlice";
 import { SummaryCardsGrid } from "./_components/SummaryCardsGrid";
 import { RevenueChart } from "./_components/RevenueChart";
 import { SubscriptionBreakdown } from "./_components/SubscriptionBreakdown";
@@ -34,6 +35,7 @@ export default function DashboardPage() {
   const { invoices, subscriptions } = useAppSelector(
     (state) => state.subscription,
   );
+  const { logs: auditLogs } = useAppSelector((state) => state.auditLog);
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "analytics" | "operations" | "health"
@@ -43,6 +45,7 @@ export default function DashboardPage() {
     dispatch(fetchBusinesses());
     dispatch(fetchInvoices());
     dispatch(fetchSubscriptions());
+    dispatch(fetchAuditLogs());
   }, [dispatch]);
 
   // Compute dynamic stats from DB
@@ -203,37 +206,33 @@ export default function DashboardPage() {
           },
         ];
 
-  // Build real Recent Activity stream from businesses and invoices
-  const activityList: ActivityItem[] = [];
+  // Build real Recent Activity stream from audit logs
+  const activityList: ActivityItem[] = auditLogs.slice(0, 6).map((log) => {
+    let type: ActivityItem["type"] = "signup";
+    
+    const actionLower = log.action?.toLowerCase() || "";
+    if (actionLower.includes("create") || actionLower.includes("register")) type = "signup";
+    else if (actionLower.includes("update") || actionLower.includes("upgrade")) type = "upgrade";
+    else if (actionLower.includes("delete") || actionLower.includes("cancel") || actionLower.includes("deactivated")) type = "cancel";
+    else if (actionLower.includes("payment") || log.category === "Invoice") type = "payment";
+    else if (actionLower.includes("suspend")) type = "suspend";
+    else if (actionLower.includes("activated")) type = "upgrade";
+    else if (actionLower.includes("reset")) type = "suspend"; // using suspend icon (XCircle red) for security resets, or default
+    else type = "signup"; // fallback
+    
+    // Use the genuine action string from the backend
+    let description = log.action || "Action performed";
 
-  businesses.forEach((b: any) => {
-    activityList.push({
-      id: `bus-${b.id}`,
-      type: b.status === "active" ? "signup" : "signup",
-      businessName: b.name || "Business",
-      description: `Registered business by ${b.owner_name || "Owner"} (${b.business_type || "Store"})`,
-      timestamp: b.created_at || new Date().toISOString(),
-    });
+    return {
+      id: log.id,
+      type,
+      businessName: log.username || "System",
+      description,
+      timestamp: log.timestamp,
+    };
   });
 
-  invoices.forEach((inv: any) => {
-    activityList.push({
-      id: `inv-${inv.id}`,
-      type: inv.status === "paid" ? "payment" : "signup",
-      businessName: inv.business?.name || "Tenant Business",
-      description: `Subscription invoice #${inv.invoice_number || inv.id.slice(0, 8)} (${inv.status.toUpperCase()}) for ₹${inv.amount}`,
-      timestamp:
-        inv.paid_at ||
-        inv.issued_at ||
-        inv.created_at ||
-        new Date().toISOString(),
-    });
-  });
-
-  activityList.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-  );
-  const recentActivity = activityList.slice(0, 6);
+  const recentActivity = activityList;
 
   const todayRevenue = invoices
     .filter((inv: any) => {

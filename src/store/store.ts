@@ -4,6 +4,7 @@ import businessReducer from './slices/businessSlice';
 import subscriptionReducer from './slices/subscriptionSlice';
 import adminReducer from './slices/adminSlice';
 import auditLogReducer from './slices/auditLogSlice';
+import supportTicketReducer from './slices/supportTicketSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     subscription: subscriptionReducer,
     admin: adminReducer,
     auditLog: auditLogReducer,
+    supportTicket: supportTicketReducer,
   },
 });
 

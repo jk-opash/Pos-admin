@@ -24,10 +24,25 @@ export default function AuditLogsPage() {
 
   const dispatch = useAppDispatch();
   const { logs, loading: isLoading } = useAppSelector((state) => state.auditLog);
+  const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(fetchAuditLogs());
-  }, [dispatch]);
+    if (user?.role === 'superadmin') {
+      dispatch(fetchAuditLogs({ actorRole: 'superadmin' }));
+    }
+  }, [dispatch, user]);
+
+  if (user?.role !== 'superadmin') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <ShieldX className="h-16 w-16 text-red-500" />
+        <h2 className="text-2xl font-bold text-brand-dark">Access Denied</h2>
+        <p className="text-brand-muted max-w-md text-center">
+          You do not have the required permissions to view audit logs. This area is restricted to super administrators.
+        </p>
+      </div>
+    );
+  }
 
   // Reset to first page when filters change
   useEffect(() => {

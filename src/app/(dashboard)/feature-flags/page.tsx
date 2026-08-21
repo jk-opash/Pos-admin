@@ -8,8 +8,21 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { StatsCard } from '@/components/ui/StatsCard';
 import { Modal } from '@/components/ui/Modal';
-import { Search, Plus, Filter, Sparkles, Box, ShieldAlert, Rocket } from 'lucide-react';
+import { Search, Plus, Filter, Sparkles, Box, ShieldAlert, Rocket, CheckCircle2 } from 'lucide-react';
 import { PlatformFeature, FeatureCategory, FeatureType, RolloutStrategy } from '@/types';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+const featureSchema = z.object({
+  code: z.string().min(1, 'Feature Code is required').regex(/^[a-z0-9_]+$/, 'Must be snake_case, lowercase letters, numbers, and underscores only'),
+  name: z.string().min(1, 'Display Name is required'),
+  description: z.string().optional(),
+  category: z.string(),
+  type: z.string(),
+});
+
+type FeatureFormValues = z.infer<typeof featureSchema>;
 
 export default function FeatureManagementPage() {
   const [features, setFeatures] = useState<PlatformFeature[]>(mockPlatformFeatures);
@@ -19,15 +32,16 @@ export default function FeatureManagementPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFeatureId, setEditingFeatureId] = useState<string | null>(null);
-  const [newFeature, setNewFeature] = useState<Partial<PlatformFeature>>({
-    code: '',
-    name: '',
-    description: '',
-    category: 'core' as FeatureCategory,
-    type: 'add_on' as FeatureType,
-    rolloutStrategy: 'percentage' as RolloutStrategy,
-    rolloutPercentage: 0,
-    dependencies: [],
+
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FeatureFormValues>({
+    resolver: zodResolver(featureSchema),
+    defaultValues: {
+      code: '',
+      name: '',
+      description: '',
+      category: 'core',
+      type: 'add_on',
+    }
   });
 
   const filteredFeatures = features.filter((feat) => {
@@ -58,41 +72,51 @@ export default function FeatureManagementPage() {
 
   const handleEdit = (feature: PlatformFeature) => {
     setEditingFeatureId(feature.id);
-    setNewFeature(feature);
+    reset({
+      code: feature.code,
+      name: feature.name,
+      description: feature.description || '',
+      category: feature.category,
+      type: feature.type,
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenCreate = () => {
     setEditingFeatureId(null);
-    setNewFeature({ code: '', name: '', description: '', category: 'core', type: 'add_on', rolloutStrategy: 'percentage', rolloutPercentage: 0, dependencies: [] });
+    reset({
+      code: '',
+      name: '',
+      description: '',
+      category: 'core',
+      type: 'add_on',
+    });
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingFeatureId(null);
-    setNewFeature({ code: '', name: '', description: '', category: 'core', type: 'add_on', rolloutStrategy: 'percentage', rolloutPercentage: 0, dependencies: [] });
+    reset();
   };
 
-  const handleSave = () => {
-    if (!newFeature.code || !newFeature.name) return;
-    
+  const onSubmit = (data: FeatureFormValues) => {
     if (editingFeatureId) {
-      setFeatures(features.map(f => f.id === editingFeatureId ? { ...f, ...newFeature } as PlatformFeature : f));
+      setFeatures(features.map(f => f.id === editingFeatureId ? { ...f, ...data } as PlatformFeature : f));
     } else {
       const featureToAdd: PlatformFeature = {
         id: `feat_${Date.now()}`,
-        code: newFeature.code,
-        name: newFeature.name,
-        description: newFeature.description || '',
-        category: newFeature.category as FeatureCategory,
-        type: newFeature.type as FeatureType,
+        code: data.code,
+        name: data.name,
+        description: data.description || '',
+        category: data.category as FeatureCategory,
+        type: data.type as FeatureType,
         status: 'disabled',
-        dependencies: newFeature.dependencies || [],
+        dependencies: [],
         enabledForPlans: ["enterprise"],
         enabledForIndustries: ["all"],
-        rolloutStrategy: newFeature.rolloutStrategy as RolloutStrategy,
-        rolloutPercentage: newFeature.rolloutPercentage || 0,
+        rolloutStrategy: 'percentage' as RolloutStrategy,
+        rolloutPercentage: 0,
         version: "1.0.0",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -177,7 +201,7 @@ export default function FeatureManagementPage() {
       
       {/* Create Feature Modal */}
       <Modal isOpen={isModalOpen} onClose={closeModal} title={editingFeatureId ? "Edit Feature" : "Register New Feature"} size="2xl">
-        <div className="flex flex-col h-[550px] -mx-6 -mb-6 -mt-4 border-t border-brand-border/50 bg-white/50 relative overflow-hidden">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[550px] -mx-6 -mb-6 -mt-4 border-t border-brand-border/50 bg-white/50 relative overflow-hidden">
           
           <div className="flex-1 p-8 overflow-y-auto pb-24">
             <div className="bg-brand-primary/10 border border-brand-primary/20 text-brand-primary p-4 rounded-xl text-sm flex gap-3 mb-6 items-start shadow-sm">
@@ -189,8 +213,8 @@ export default function FeatureManagementPage() {
               <div className="col-span-2">
                 <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">Feature Code *</label>
                 <Input 
-                  value={newFeature.code}
-                  onChange={(e) => setNewFeature({ ...newFeature, code: e.target.value })}
+                  {...register('code')}
+                  error={errors.code?.message}
                   placeholder="e.g. pos_kitchen_display"
                 />
                 <p className="text-[10px] text-brand-muted mt-1.5 ml-1">Must match the code used in the application source.</p>
@@ -199,28 +223,30 @@ export default function FeatureManagementPage() {
               <div className="col-span-2">
                 <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">Display Name *</label>
                 <Input 
-                  value={newFeature.name}
-                  onChange={(e) => setNewFeature({ ...newFeature, name: e.target.value })}
+                  {...register('name')}
+                  error={errors.name?.message}
                   placeholder="e.g. Kitchen Display System"
                 />
               </div>
 
               <div className="col-span-2">
                 <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">Description</label>
-                <textarea 
-                  value={newFeature.description}
-                  onChange={(e) => setNewFeature({ ...newFeature, description: e.target.value })}
-                  placeholder="Briefly describe what this feature does..."
-                  className="w-full rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
-                  rows={3}
-                />
+                <div className="flex flex-col gap-1.5">
+                  <textarea 
+                    {...register('description')}
+                    placeholder="Briefly describe what this feature does..."
+                    className={`w-full rounded-xl border ${errors.description ? 'border-brand-danger bg-red-50/30' : 'border-brand-border bg-white'} px-4 py-3 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all`}
+                    rows={3}
+                  />
+                  {errors.description && <p className="text-xs font-medium text-brand-danger">{errors.description.message}</p>}
+                </div>
               </div>
 
               <div>
                 <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">Category</label>
                 <Select 
-                  value={newFeature.category as string}
-                  onChange={(e) => setNewFeature({ ...newFeature, category: e.target.value as FeatureCategory })}
+                  {...register('category')}
+                  error={errors.category?.message}
                   options={[
                     { label: 'Core', value: 'core' },
                     { label: 'Inventory', value: 'inventory' },
@@ -234,8 +260,8 @@ export default function FeatureManagementPage() {
               <div>
                 <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">Feature Type</label>
                 <Select 
-                  value={newFeature.type as string}
-                  onChange={(e) => setNewFeature({ ...newFeature, type: e.target.value as FeatureType })}
+                  {...register('type')}
+                  error={errors.type?.message}
                   options={[
                     { label: 'Core', value: 'core' },
                     { label: 'Premium', value: 'premium' },
@@ -248,14 +274,11 @@ export default function FeatureManagementPage() {
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-brand-border/50 bg-white/70 backdrop-blur-xl flex justify-end gap-3 z-10">
-            <Button variant="outline" onClick={closeModal} className="bg-white hover:bg-slate-50 border-slate-200">Cancel</Button>
-            <Button onClick={handleSave} className="bg-brand-primary hover:bg-brand-primaryDark text-white px-8 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">{editingFeatureId ? "Save Changes" : "Create Feature"}</Button>
+            <Button type="button" variant="outline" onClick={closeModal} className="bg-white hover:bg-slate-50 border-slate-200">Cancel</Button>
+            <Button type="submit" className="bg-brand-primary hover:bg-brand-primaryDark text-white px-8 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">{editingFeatureId ? "Save Changes" : "Create Feature"}</Button>
           </div>
-        </div>
+        </form>
       </Modal>
     </div>
   );
 }
-
-// Temporary import for CheckCircle2 since I removed it above
-import { CheckCircle2 } from 'lucide-react';

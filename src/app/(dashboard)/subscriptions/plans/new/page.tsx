@@ -1,10 +1,9 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -13,75 +12,67 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { addSubscriptionPlan } from "@/store/slices/subscriptionSlice";
 import { toast } from "react-toastify";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const planSchema = z.object({
+  plan: z.string().min(1, "Plan name is required"),
+  status: z.string().min(1, "Status is required"),
+  currency: z.string().min(1, "Currency is required"),
+  billing_cycle: z.string().min(1, "Billing cycle is required"),
+  amount: z.number().min(0, "Amount must be a positive number or 0"),
+  max_branches: z.number().min(0, "Must be a valid number (use 0 for unlimited)"),
+  max_team_members: z.number().min(0, "Must be a valid number (use 0 for unlimited)"),
+  auto_renew: z.boolean(),
+  cancel_at_period_end: z.boolean(),
+  is_active: z.boolean(),
+});
+
+type PlanFormValues = z.infer<typeof planSchema>;
 
 export default function NewPlanPage() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PlanFormValues>({
+    resolver: zodResolver(planSchema),
+    defaultValues: {
+      plan: "starter",
+      status: "active",
+      currency: "INR",
+      billing_cycle: "yearly",
+      amount: 0,
+      max_branches: 1,
+      max_team_members: 5,
+      auto_renew: true,
+      cancel_at_period_end: false,
+      is_active: true,
+    },
+  });
+
+  const onSubmit = async (data: PlanFormValues) => {
     setIsSaving(true);
-
-    const formData = new FormData(e.currentTarget);
-    const rawAmount = formData.get("amount") as string;
-    const rawMaxBranches = formData.get("max_branches") as string;
-    const rawMaxTeamMembers = formData.get("max_team_members") as string;
-
-    const newErrors: Record<string, string> = {};
-    if (!rawAmount || isNaN(Number(rawAmount)) || Number(rawAmount) < 0) {
-      newErrors.amount = "Amount must be a positive number or 0";
-    }
-    if (
-      !rawMaxBranches ||
-      isNaN(Number(rawMaxBranches)) ||
-      Number(rawMaxBranches) < 0
-    ) {
-      newErrors.max_branches = "Must be a valid number (use 0 for unlimited)";
-    }
-    if (
-      !rawMaxTeamMembers ||
-      isNaN(Number(rawMaxTeamMembers)) ||
-      Number(rawMaxTeamMembers) < 0
-    ) {
-      newErrors.max_team_members =
-        "Must be a valid number (use 0 for unlimited)";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      toast.error("Please fill all required fields correctly.");
-      setIsSaving(false);
-      return;
-    }
-    setErrors({});
-
-    const data = {
-      plan: formData.get("plan") as string,
-      status: formData.get("status") as string,
-      currency: formData.get("currency") as string,
-      billing_cycle: formData.get("billing_cycle") as string,
-      amount: Number(formData.get("amount")) || 0,
-      max_branches: Number(formData.get("max_branches")) || 0,
-      max_team_members: Number(formData.get("max_team_members")) || 0,
-      auto_renew: formData.get("auto_renew") === "on",
-      cancel_at_period_end: formData.get("cancel_at_period_end") === "on",
-      is_active: formData.get("is_active") === "on",
-    };
 
     try {
       await dispatch(addSubscriptionPlan(data)).unwrap();
+      toast.success("Plan created successfully!");
       router.push("/subscriptions/plans");
     } catch (err) {
       console.error("Failed to add plan:", err);
+      toast.error("Failed to create plan");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 pb-12 mx-auto">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-12 mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -135,7 +126,8 @@ export default function NewPlanPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 label="Plan Name *"
-                name="plan"
+                {...register("plan")}
+                error={errors.plan?.message}
                 options={[
                   { label: "Free Trial", value: "free trial" },
                   { label: "Starter", value: "starter" },
@@ -146,7 +138,8 @@ export default function NewPlanPage() {
               />
               <Select
                 label="Status *"
-                name="status"
+                {...register("status")}
+                error={errors.status?.message}
                 options={[
                   { label: "Active", value: "active" },
                   { label: "Trialing", value: "trialing" },
@@ -160,8 +153,7 @@ export default function NewPlanPage() {
                 <label className="flex items-center gap-3 p-3 rounded-xl border border-brand-border hover:bg-slate-50 cursor-pointer">
                   <input
                     type="checkbox"
-                    name="is_active"
-                    defaultChecked={true}
+                    {...register("is_active")}
                     className="w-5 h-5 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
                   />
                   <div className="flex flex-col">
@@ -190,7 +182,8 @@ export default function NewPlanPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Select
                 label="Currency *"
-                name="currency"
+                {...register("currency")}
+                error={errors.currency?.message}
                 options={[
                   { label: "INR (₹)", value: "INR" },
                   { label: "USD ($)", value: "USD" },
@@ -201,15 +194,17 @@ export default function NewPlanPage() {
               />
               <Select
                 label="Billing Cycle *"
-                name="billing_cycle"
+                {...register("billing_cycle")}
+                error={errors.billing_cycle?.message}
                 options={[{ label: "Yearly", value: "yearly" }]}
               />
               <Input
                 label="Amount / Price *"
-                name="amount"
                 type="number"
+                step="0.01"
                 placeholder="0.00"
-                error={errors.amount}
+                {...register("amount", { valueAsNumber: true })}
+                error={errors.amount?.message}
               />
             </div>
           </div>
@@ -228,17 +223,15 @@ export default function NewPlanPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <Input
                 label="Max Branches"
-                name="max_branches"
                 type="number"
-                defaultValue="1"
-                error={errors.max_branches}
+                {...register("max_branches", { valueAsNumber: true })}
+                error={errors.max_branches?.message}
               />
               <Input
                 label="Max Employees / Users"
-                name="max_team_members"
                 type="number"
-                defaultValue="5"
-                error={errors.max_team_members}
+                {...register("max_team_members", { valueAsNumber: true })}
+                error={errors.max_team_members?.message}
               />
             </div>
           </div>
@@ -257,7 +250,7 @@ export default function NewPlanPage() {
               <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
                 <input
                   type="checkbox"
-                  name="auto_renew"
+                  {...register("auto_renew")}
                   className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
                 />
                 <div>
@@ -272,7 +265,7 @@ export default function NewPlanPage() {
               <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
                 <input
                   type="checkbox"
-                  name="cancel_at_period_end"
+                  {...register("cancel_at_period_end")}
                   className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
                 />
                 <div>

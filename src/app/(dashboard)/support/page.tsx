@@ -1,8 +1,9 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useState } from 'react';
-import { mockSupportTickets } from '@/lib/mock/support-tickets';
+import { useState, useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchSupportTickets } from '@/store/slices/supportTicketSlice';
 import { TicketTable } from '@/app/(dashboard)/support/_components/TicketTable';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -15,10 +16,18 @@ export default function SupportPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
 
-  const filteredTickets = mockSupportTickets.filter((ticket) => {
+  const dispatch = useAppDispatch();
+  const { tickets, loading } = useAppSelector((state) => state.supportTicket);
+
+  useEffect(() => {
+    dispatch(fetchSupportTickets());
+  }, [dispatch]);
+
+  const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ticket.branchName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       ticket.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Simplistic mapping for the status filter
@@ -33,10 +42,17 @@ export default function SupportPage() {
   });
 
   // Calculate KPIs
-  const totalOpen = mockSupportTickets.filter(t => ['open', 'in_progress', 'escalated'].includes(t.status)).length;
-  const totalBreached = mockSupportTickets.filter(t => t.slaBreached && t.status !== 'closed' && t.status !== 'resolved').length;
-  const avgCsat = mockSupportTickets.filter(t => t.csatScore).reduce((acc, t) => acc + (t.csatScore || 0), 0) / 
-                  (mockSupportTickets.filter(t => t.csatScore).length || 1);
+  const totalOpen = tickets.filter(t => ['open', 'in_progress', 'escalated'].includes(t.status)).length;
+  const totalBreached = tickets.filter(t => t.slaBreached && t.status !== 'closed' && t.status !== 'resolved').length;
+  const validCsatTickets = tickets.filter(t => t.csatScore !== undefined && t.csatScore !== null);
+  const avgCsat = validCsatTickets.length > 0 
+    ? validCsatTickets.reduce((acc, t) => acc + (t.csatScore || 0), 0) / validCsatTickets.length 
+    : 0;
+
+  const validResTimeTickets = tickets.filter(t => t.resolutionTimeHrs !== undefined && t.resolutionTimeHrs !== null);
+  const avgResolutionTime = validResTimeTickets.length > 0
+    ? validResTimeTickets.reduce((acc, t) => acc + (t.resolutionTimeHrs || 0), 0) / validResTimeTickets.length
+    : 0;
 
   return (
     <div className="space-y-6 pb-12">
@@ -63,13 +79,11 @@ export default function SupportPage() {
           title="SLA Breached"
           value={totalBreached}
           icon={<AlertCircle className={`h-5 w-5 ${totalBreached > 0 ? 'text-red-500' : 'text-emerald-500'}`} />}
-          trend={totalBreached > 0 ? { value: 2, label: 'needs immediate action', positive: false } : undefined}
         />
         <StatsCard
           title="Avg Resolution Time"
-          value="4.2 hrs"
+          value={avgResolutionTime > 0 ? `${avgResolutionTime.toFixed(1)} hrs` : '-'}
           icon={<Clock className="h-5 w-5 text-amber-500" />}
-          trend={{ value: 15, label: 'faster than last week', positive: true }}
         />
         <StatsCard
           title="Avg CSAT Score"
@@ -123,7 +137,13 @@ export default function SupportPage() {
           </div>
         </div>
 
-        <TicketTable data={filteredTickets} />
+        {loading ? (
+          <div className="py-16 text-center text-sm font-medium text-brand-muted">
+            Loading support tickets...
+          </div>
+        ) : (
+          <TicketTable data={filteredTickets} />
+        )}
       </div>
     </div>
   );

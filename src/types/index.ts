@@ -265,6 +265,7 @@ export interface SupportTicket {
   closedAt?: string;
   
   csatScore?: number;
+  resolutionTimeHrs?: number;
 }
 
 // ── Feature Flag ──────────────────────────────────────────────────────────────

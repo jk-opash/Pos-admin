@@ -1,13 +1,68 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { Store, MapPin, FileText, User, Sliders, Loader2 } from 'lucide-react';
-import { Business, BusinessType } from '@/types';
-import { useAppDispatch } from '@/store/hooks';
-import { updateBusiness } from '@/store/slices/businessSlice';
+import { useState, useEffect } from "react";
+import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Store, MapPin, FileText, User, Sliders, Loader2 } from "lucide-react";
+import { Business, BusinessType } from "@/types";
+import { useAppDispatch } from "@/store/hooks";
+import { updateBusiness } from "@/store/slices/businessSlice";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const businessSchema = z.object({
+  name: z.string().min(1, "Business Name is required"),
+  type: z.enum([
+    "restaurant",
+    "cafe",
+    "retail",
+    "grocery",
+    "pharmacy",
+    "salon",
+    "hotel",
+    "electronics",
+    "clothing",
+    "hardware",
+    "bakery",
+  ]),
+  website: z.string().url("Invalid URL").or(z.literal("")).optional(),
+  phone: z.string().min(10, "Valid phone number is required"),
+  email: z.string().email("Invalid email address"),
+  owner: z.object({
+    name: z.string().min(1, "Owner Name is required"),
+    email: z
+      .string()
+      .email("Invalid email address")
+      .or(z.literal(""))
+      .optional(),
+    phone: z
+      .string()
+      .min(10, "Valid phone number is required")
+      .or(z.literal(""))
+      .optional(),
+  }),
+  address: z.object({
+    line1: z.string().min(1, "Address Line 1 is required"),
+    line2: z.string().optional(),
+    city: z.string().min(1, "City is required"),
+    state: z.string().min(1, "State is required"),
+    country: z.string().min(1, "Country is required"),
+    pincode: z.string().min(1, "Pincode is required"),
+  }),
+  legalName: z.string().min(1, "Legal Name is required"),
+  gstin: z.string().optional(),
+  pan: z.string().optional(),
+  subscription: z
+    .object({
+      maxBranches: z.number().min(1, "At least 1 branch required"),
+      maxUsers: z.number().min(1, "At least 1 staff user required"),
+    })
+    .optional(),
+});
+
+type BusinessFormValues = z.infer<typeof businessSchema>;
 
 interface EditBusinessModalProps {
   isOpen: boolean;
@@ -16,121 +71,187 @@ interface EditBusinessModalProps {
   onSuccess?: (business: Business) => void;
 }
 
-export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess }: EditBusinessModalProps) {
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [editTab, setEditTab] = useState<'info' | 'location' | 'legal' | 'owner' | 'limits'>('info');
+export function EditBusinessModal({
+  isOpen,
+  onClose,
+  initialBusiness,
+  onSuccess,
+}: EditBusinessModalProps) {
+  const [editTab, setEditTab] = useState<
+    "info" | "location" | "legal" | "owner" | "limits"
+  >("info");
   const [isSaving, setIsSaving] = useState(false);
   const dispatch = useAppDispatch();
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<BusinessFormValues>({
+    resolver: zodResolver(businessSchema),
+  });
+
   useEffect(() => {
     if (initialBusiness && isOpen) {
-      setBusiness(JSON.parse(JSON.stringify(initialBusiness)));
-      setEditTab('info');
+      reset({
+        name: initialBusiness.name || "",
+        type: initialBusiness.type || "retail",
+        website: initialBusiness.website || "",
+        phone: initialBusiness.phone || "",
+        email: initialBusiness.email || "",
+        owner: {
+          name: initialBusiness.owner?.name || "",
+          email: initialBusiness.owner?.email || "",
+          phone: initialBusiness.owner?.phone || "",
+        },
+        address: {
+          line1: initialBusiness.address?.line1 || "",
+          line2: initialBusiness.address?.line2 || "",
+          city: initialBusiness.address?.city || "",
+          state: initialBusiness.address?.state || "",
+          country: initialBusiness.address?.country || "",
+          pincode: initialBusiness.address?.pincode || "",
+        },
+        legalName: initialBusiness.legalName || "",
+        gstin: initialBusiness.gstin || "",
+        pan: initialBusiness.pan || "",
+        subscription: {
+          maxBranches: initialBusiness.subscription?.maxBranches || 1,
+          maxUsers: initialBusiness.subscription?.maxUsers || 1,
+        },
+      });
+      setEditTab("info");
     }
-  }, [initialBusiness, isOpen]);
+  }, [initialBusiness, isOpen, reset]);
 
-  const handleSave = async () => {
-    if (!business) return;
+  const onSubmit = async (data: BusinessFormValues) => {
+    if (!initialBusiness) return;
     setIsSaving(true);
     try {
       const backendData = {
-        name: business.name,
-        legal_name: business.legalName,
-        business_type: business.type,
-        website: business.website,
-        email: business.email,
-        phone: business.phone,
-        address_line1: business.address.line1,
-        address_line2: business.address.line2,
-        city: business.address.city,
-        state: business.address.state,
-        country: business.address.country,
-        pincode: business.address.pincode,
-        gstin: business.gstin,
-        pan: business.pan,
+        name: data.name,
+        legal_name: data.legalName,
+        business_type: data.type,
+        website: data.website,
+        email: data.email,
+        phone: data.phone,
+        address_line1: data.address.line1,
+        address_line2: data.address.line2,
+        city: data.address.city,
+        state: data.address.state,
+        country: data.address.country,
+        pincode: data.address.pincode,
+        gstin: data.gstin,
+        pan: data.pan,
         // Optional owner details
-        admin_name: business.owner.name,
-        admin_email: business.owner.email,
-        admin_phone: business.owner.phone,
+        admin_name: data.owner.name,
+        admin_email: data.owner.email,
+        admin_phone: data.owner.phone,
         // Limits
-        max_branches: business.subscription?.maxBranches,
-        max_team_members: business.subscription?.maxUsers,
+        max_branches: data.subscription?.maxBranches,
+        max_team_members: data.subscription?.maxUsers,
       };
-      
-      const updatedBusiness = await dispatch(updateBusiness({ id: business.id, data: backendData })).unwrap();
-      onSuccess?.(business);
+
+      const updatedBusiness = await dispatch(
+        updateBusiness({ id: initialBusiness.id, data: backendData }),
+      ).unwrap();
+      onSuccess?.({ ...initialBusiness, ...data } as unknown as Business);
       onClose();
     } catch (err) {
-      console.error('Failed to save', err);
+      console.error("Failed to save", err);
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (!business) return null;
+  if (!initialBusiness) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Business Details" size="5xl">
-      <div className="flex h-[650px] -mx-6 -mb-6 -mt-4 border-t border-brand-border/50">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Business Details"
+      size="5xl"
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex h-[650px] -mx-6 -mb-6 -mt-4 border-t border-brand-border/50"
+      >
         {/* Sidebar Navigation */}
         <div className="w-64 bg-slate-50/50 border-r border-brand-border/50 p-6 flex flex-col gap-2 shrink-0">
           <button
-            onClick={() => setEditTab('info')}
+            type="button"
+            onClick={() => setEditTab("info")}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-left ${
-              editTab === 'info'
-                ? 'bg-white shadow-sm border border-brand-border/60 text-brand-dark'
-                : 'text-brand-muted hover:bg-slate-100 hover:text-brand-dark'
+              editTab === "info"
+                ? "bg-white shadow-sm border border-brand-border/60 text-brand-dark"
+                : "text-brand-muted hover:bg-slate-100 hover:text-brand-dark"
             }`}
           >
-            <Store className={`h-4 w-4 ${editTab === 'info' ? 'text-brand-primary' : ''}`} />
+            <Store
+              className={`h-4 w-4 ${editTab === "info" ? "text-brand-primary" : ""}`}
+            />
             Business Info
           </button>
-          
+
           <button
-            onClick={() => setEditTab('owner')}
+            type="button"
+            onClick={() => setEditTab("owner")}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-left ${
-              editTab === 'owner'
-                ? 'bg-white shadow-sm border border-brand-border/60 text-brand-dark'
-                : 'text-brand-muted hover:bg-slate-100 hover:text-brand-dark'
+              editTab === "owner"
+                ? "bg-white shadow-sm border border-brand-border/60 text-brand-dark"
+                : "text-brand-muted hover:bg-slate-100 hover:text-brand-dark"
             }`}
           >
-            <User className={`h-4 w-4 ${editTab === 'owner' ? 'text-brand-primary' : ''}`} />
+            <User
+              className={`h-4 w-4 ${editTab === "owner" ? "text-brand-primary" : ""}`}
+            />
             Owner Details
           </button>
 
           <button
-            onClick={() => setEditTab('location')}
+            type="button"
+            onClick={() => setEditTab("location")}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-left ${
-              editTab === 'location'
-                ? 'bg-white shadow-sm border border-brand-border/60 text-brand-dark'
-                : 'text-brand-muted hover:bg-slate-100 hover:text-brand-dark'
+              editTab === "location"
+                ? "bg-white shadow-sm border border-brand-border/60 text-brand-dark"
+                : "text-brand-muted hover:bg-slate-100 hover:text-brand-dark"
             }`}
           >
-            <MapPin className={`h-4 w-4 ${editTab === 'location' ? 'text-brand-primary' : ''}`} />
+            <MapPin
+              className={`h-4 w-4 ${editTab === "location" ? "text-brand-primary" : ""}`}
+            />
             Location
           </button>
-          
+
           <button
-            onClick={() => setEditTab('legal')}
+            type="button"
+            onClick={() => setEditTab("legal")}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-left ${
-              editTab === 'legal'
-                ? 'bg-white shadow-sm border border-brand-border/60 text-brand-dark'
-                : 'text-brand-muted hover:bg-slate-100 hover:text-brand-dark'
+              editTab === "legal"
+                ? "bg-white shadow-sm border border-brand-border/60 text-brand-dark"
+                : "text-brand-muted hover:bg-slate-100 hover:text-brand-dark"
             }`}
           >
-            <FileText className={`h-4 w-4 ${editTab === 'legal' ? 'text-brand-primary' : ''}`} />
+            <FileText
+              className={`h-4 w-4 ${editTab === "legal" ? "text-brand-primary" : ""}`}
+            />
             Legal & Tax
           </button>
-          
+
           <button
-            onClick={() => setEditTab('limits')}
+            type="button"
+            onClick={() => setEditTab("limits")}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-left ${
-              editTab === 'limits'
-                ? 'bg-white shadow-sm border border-brand-border/60 text-brand-dark'
-                : 'text-brand-muted hover:bg-slate-100 hover:text-brand-dark'
+              editTab === "limits"
+                ? "bg-white shadow-sm border border-brand-border/60 text-brand-dark"
+                : "text-brand-muted hover:bg-slate-100 hover:text-brand-dark"
             }`}
           >
-            <Sliders className={`h-4 w-4 ${editTab === 'limits' ? 'text-brand-primary' : ''}`} />
+            <Sliders
+              className={`h-4 w-4 ${editTab === "limits" ? "text-brand-primary" : ""}`}
+            />
             Resource Limits
           </button>
         </div>
@@ -138,41 +259,60 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col relative bg-white/50 overflow-hidden">
           <div className="flex-1 p-8 overflow-y-auto pb-28">
-            {editTab === 'info' && (
+            {editTab === "info" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <h3 className="text-lg font-bold text-brand-dark">Business Information</h3>
+                <h3 className="text-lg font-bold text-brand-dark">
+                  Business Information
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">
                       Business Name
                     </label>
-                    <Input
-                      value={business.name || ''}
-                      onChange={(e) => setBusiness({ ...business, name: e.target.value })}
-                    />
+                    <Input {...register("name")} error={errors.name?.message} />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">
                       Business Type
                     </label>
-                    <select
-                      className="w-full rounded-xl border border-slate-200 bg-white/50 px-4 py-2.5 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all capitalize"
-                      value={business.type || ''}
-                      onChange={(e) => setBusiness({ ...business, type: e.target.value as BusinessType })}
-                    >
-                      {['restaurant', 'cafe', 'retail', 'grocery', 'pharmacy', 'salon', 'hotel', 'electronics', 'clothing', 'hardware', 'bakery'].map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
+                    <div className="flex flex-col gap-1.5">
+                      <select
+                        className={`w-full rounded-xl border border-slate-200 bg-white/50 px-4 py-2.5 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all capitalize ${errors.type ? "border-red-500 ring-red-500/20" : ""}`}
+                        {...register("type")}
+                      >
+                        {[
+                          "restaurant",
+                          "cafe",
+                          "retail",
+                          "grocery",
+                          "pharmacy",
+                          "salon",
+                          "hotel",
+                          "electronics",
+                          "clothing",
+                          "hardware",
+                          "bakery",
+                        ].map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.type && (
+                        <p className="text-xs font-medium text-brand-danger">
+                          {errors.type.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">
                       Website
                     </label>
                     <Input
-                      value={business.website || ''}
                       placeholder="https://..."
-                      onChange={(e) => setBusiness({ ...business, website: e.target.value })}
+                      {...register("website")}
+                      error={errors.website?.message}
                     />
                   </div>
                   <div>
@@ -180,8 +320,8 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       Business Phone
                     </label>
                     <Input
-                      value={business.phone || ''}
-                      onChange={(e) => setBusiness({ ...business, phone: e.target.value })}
+                      {...register("phone")}
+                      error={errors.phone?.message}
                     />
                   </div>
                   <div>
@@ -189,25 +329,27 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       Business Email
                     </label>
                     <Input
-                      value={business.email || ''}
-                      onChange={(e) => setBusiness({ ...business, email: e.target.value })}
+                      {...register("email")}
+                      error={errors.email?.message}
                     />
                   </div>
                 </div>
               </div>
             )}
 
-            {editTab === 'owner' && (
+            {editTab === "owner" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <h3 className="text-lg font-bold text-brand-dark">Owner Details</h3>
+                <h3 className="text-lg font-bold text-brand-dark">
+                  Owner Details
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">
                       Owner Name
                     </label>
                     <Input
-                      value={business.owner.name || ''}
-                      onChange={(e) => setBusiness({ ...business, owner: { ...business.owner, name: e.target.value } })}
+                      {...register("owner.name")}
+                      error={errors.owner?.name?.message}
                     />
                   </div>
                   <div>
@@ -215,8 +357,8 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       Owner Email
                     </label>
                     <Input
-                      value={business.owner.email || ''}
-                      onChange={(e) => setBusiness({ ...business, owner: { ...business.owner, email: e.target.value } })}
+                      {...register("owner.email")}
+                      error={errors.owner?.email?.message}
                     />
                   </div>
                   <div>
@@ -224,15 +366,15 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       Owner Phone
                     </label>
                     <Input
-                      value={business.owner.phone || ''}
-                      onChange={(e) => setBusiness({ ...business, owner: { ...business.owner, phone: e.target.value } })}
+                      {...register("owner.phone")}
+                      error={errors.owner?.phone?.message}
                     />
                   </div>
                 </div>
               </div>
             )}
 
-            {editTab === 'location' && (
+            {editTab === "location" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                 <h3 className="text-lg font-bold text-brand-dark">Location</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -241,8 +383,8 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       Address Line 1
                     </label>
                     <Input
-                      value={business.address.line1 || ''}
-                      onChange={(e) => setBusiness({ ...business, address: { ...business.address, line1: e.target.value } })}
+                      {...register("address.line1")}
+                      error={errors.address?.line1?.message}
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -250,8 +392,8 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       Address Line 2
                     </label>
                     <Input
-                      value={business.address.line2 || ''}
-                      onChange={(e) => setBusiness({ ...business, address: { ...business.address, line2: e.target.value } })}
+                      {...register("address.line2")}
+                      error={errors.address?.line2?.message}
                     />
                   </div>
                   <div>
@@ -259,8 +401,8 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       City
                     </label>
                     <Input
-                      value={business.address.city || ''}
-                      onChange={(e) => setBusiness({ ...business, address: { ...business.address, city: e.target.value } })}
+                      {...register("address.city")}
+                      error={errors.address?.city?.message}
                     />
                   </div>
                   <div>
@@ -268,8 +410,8 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       State
                     </label>
                     <Input
-                      value={business.address.state || ''}
-                      onChange={(e) => setBusiness({ ...business, address: { ...business.address, state: e.target.value } })}
+                      {...register("address.state")}
+                      error={errors.address?.state?.message}
                     />
                   </div>
                   <div>
@@ -277,8 +419,8 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       Country
                     </label>
                     <Input
-                      value={business.address.country || ''}
-                      onChange={(e) => setBusiness({ ...business, address: { ...business.address, country: e.target.value } })}
+                      {...register("address.country")}
+                      error={errors.address?.country?.message}
                     />
                   </div>
                   <div>
@@ -286,25 +428,27 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       Pincode
                     </label>
                     <Input
-                      value={business.address.pincode || ''}
-                      onChange={(e) => setBusiness({ ...business, address: { ...business.address, pincode: e.target.value } })}
+                      {...register("address.pincode")}
+                      error={errors.address?.pincode?.message}
                     />
                   </div>
                 </div>
               </div>
             )}
 
-            {editTab === 'legal' && (
+            {editTab === "legal" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <h3 className="text-lg font-bold text-brand-dark">Legal & Tax</h3>
+                <h3 className="text-lg font-bold text-brand-dark">
+                  Legal & Tax
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">
                       Legal Name
                     </label>
                     <Input
-                      value={business.legalName || ''}
-                      onChange={(e) => setBusiness({ ...business, legalName: e.target.value })}
+                      {...register("legalName")}
+                      error={errors.legalName?.message}
                     />
                   </div>
                   <div>
@@ -312,27 +456,29 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                       GSTIN
                     </label>
                     <Input
-                      value={business.gstin || ''}
-                      onChange={(e) => setBusiness({ ...business, gstin: e.target.value })}
+                      {...register("gstin")}
+                      error={errors.gstin?.message}
                     />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">
                       PAN
                     </label>
-                    <Input
-                      value={business.pan || ''}
-                      onChange={(e) => setBusiness({ ...business, pan: e.target.value })}
-                    />
+                    <Input {...register("pan")} error={errors.pan?.message} />
                   </div>
                 </div>
               </div>
             )}
 
-            {editTab === 'limits' && (
+            {editTab === "limits" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <h3 className="text-lg font-bold text-brand-dark">Resource Limits</h3>
-                <p className="text-sm text-brand-muted">Override the default subscription plan limits for this business.</p>
+                <h3 className="text-lg font-bold text-brand-dark">
+                  Resource Limits
+                </h3>
+                <p className="text-sm text-brand-muted">
+                  Override the default subscription plan limits for this
+                  business.
+                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="text-xs font-bold text-brand-muted uppercase tracking-wider mb-2 block">
@@ -340,15 +486,11 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                     </label>
                     <Input
                       type="number"
-                      min={1}
-                      value={business.subscription?.maxBranches || ''}
-                      onChange={(e) => setBusiness({ 
-                        ...business, 
-                        subscription: { 
-                          ...business.subscription, 
-                          maxBranches: parseInt(e.target.value) || 0 
-                        } 
+                      min="1"
+                      {...register("subscription.maxBranches", {
+                        valueAsNumber: true,
                       })}
+                      error={errors.subscription?.maxBranches?.message}
                     />
                   </div>
                   <div>
@@ -357,15 +499,11 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
                     </label>
                     <Input
                       type="number"
-                      min={1}
-                      value={business.subscription?.maxUsers || ''}
-                      onChange={(e) => setBusiness({ 
-                        ...business, 
-                        subscription: { 
-                          ...business.subscription, 
-                          maxUsers: parseInt(e.target.value) || 0 
-                        } 
+                      min="1"
+                      {...register("subscription.maxUsers", {
+                        valueAsNumber: true,
                       })}
+                      error={errors.subscription?.maxUsers?.message}
                     />
                   </div>
                 </div>
@@ -376,6 +514,7 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
           {/* Sticky Footer */}
           <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-brand-border/50 bg-white/70 backdrop-blur-xl flex justify-end gap-3 z-10">
             <Button
+              type="button"
               variant="outline"
               className="bg-white hover:bg-slate-50 border-slate-200"
               onClick={onClose}
@@ -384,16 +523,16 @@ export function EditBusinessModal({ isOpen, onClose, initialBusiness, onSuccess 
               Cancel
             </Button>
             <Button
+              type="submit"
               disabled={isSaving}
               className="bg-brand-primary hover:bg-brand-primaryDark text-white px-8 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
-              onClick={handleSave}
             >
               {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 }

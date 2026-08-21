@@ -16,9 +16,13 @@ const initialState: AuditLogState = {
 
 export const fetchAuditLogs = createAsyncThunk(
   'auditLog/fetchAuditLogs',
-  async (_, { rejectWithValue }) => {
+  async (params: { actorRole?: string } | undefined, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.get('/audit-logs');
+      const queryParams = new URLSearchParams();
+      if (params?.actorRole) queryParams.append('actor_role', params.actorRole);
+      
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      const res = await axiosInstance.get(`/audit-logs${queryString}`);
       
       const mappedLogs: AuditLog[] = res.data.data.map((log: any) => ({
         id: log.id,

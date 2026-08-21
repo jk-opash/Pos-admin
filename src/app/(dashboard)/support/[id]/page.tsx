@@ -1,26 +1,58 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Clock, AlertCircle, Paperclip, Send, ShieldAlert, CheckCircle2, MoreVertical, Search, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
-import { mockSupportTickets } from '@/lib/mock/support-tickets';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchSupportTicketById, updateSupportTicket } from '@/store/slices/supportTicketSlice';
 import { formatRelativeTime, formatDate } from '@/lib/utils';
 import { SupportTicket } from '@/types';
+import toast from 'react-hot-toast';
 
 export default function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const ticket = mockSupportTickets.find(t => t.id === resolvedParams.id);
+  const dispatch = useAppDispatch();
+  const { currentTicket: ticket, loading, error } = useAppSelector((state) => state.supportTicket);
+  
+  const [hasFetched, setHasFetched] = useState(false);
+
+  useEffect(() => {
+    setHasFetched(false);
+    dispatch(fetchSupportTicketById(resolvedParams.id)).finally(() => {
+      setHasFetched(true);
+    });
+  }, [dispatch, resolvedParams.id]);
   
   const [replyText, setReplyText] = useState('');
   const [internalNoteText, setInternalNoteText] = useState('');
   const [activeTab, setActiveTab] = useState<'conversation' | 'internal_notes'>('conversation');
 
-  if (!ticket) return notFound();
+  const handleUpdateTicket = async (data: Partial<SupportTicket>) => {
+    if (!ticket) return;
+    try {
+      await dispatch(updateSupportTicket({ id: ticket.id, data })).unwrap();
+      toast.success('Ticket updated successfully');
+    } catch (err: any) {
+      toast.error(err || 'Failed to update ticket');
+    }
+  };
+
+  if (error && hasFetched) {
+    return notFound();
+  }
+
+  if (loading || !ticket || ticket.id !== resolvedParams.id) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+        <p className="text-brand-muted">Loading ticket details...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12 h-[calc(100vh-8rem)] flex flex-col">
@@ -37,7 +69,11 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
         </div>
         <div className="flex items-center gap-3">
           {ticket.status !== 'closed' && ticket.status !== 'resolved' && (
-            <Button variant="secondary" className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50">
+            <Button 
+              variant="secondary" 
+              className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => handleUpdateTicket({ status: 'resolved' })}
+            >
               <CheckCircle2 className="h-4 w-4" /> Mark Resolved
             </Button>
           )}
@@ -84,7 +120,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
             {/* Render Timeline based on active tab */}
             {activeTab === 'conversation' ? (
               <>
-                {ticket.messages.map(msg => (
+                {(ticket.messages || []).map(msg => (
                   <div key={msg.id} className={`flex flex-col gap-1 max-w-3xl ${msg.senderRole !== 'customer' ? 'self-end items-end' : ''}`}>
                     <div className="flex items-center gap-2 text-xs text-brand-muted mb-1">
                       <span className="font-semibold text-brand-dark">{msg.senderName}</span>
@@ -128,7 +164,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                   <p>Internal notes are strictly private. The customer <strong>cannot</strong> see anything written in this tab.</p>
                 </div>
                 
-                {ticket.internalNotes.map(note => (
+                {(ticket.internalNotes || []).map(note => (
                   <div key={note.id} className="flex flex-col gap-1 max-w-3xl">
                     <div className="flex items-center gap-2 text-xs text-brand-muted mb-1">
                       <span className="font-semibold text-amber-900">{note.authorName}</span>
@@ -141,7 +177,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                   </div>
                 ))}
                 
-                {ticket.internalNotes.length === 0 && (
+                {(ticket.internalNotes || []).length === 0 && (
                   <p className="text-sm text-brand-placeholder text-center my-8">No internal notes yet.</p>
                 )}
               </>
@@ -197,6 +233,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 <label className="text-xs font-semibold text-brand-muted uppercase tracking-wide mb-1.5 block">Status</label>
                 <Select
                   value={ticket.status}
+                  onChange={(e) => handleUpdateTicket({ status: e.target.value as any })}
                   options={[
                     { label: 'Open', value: 'open' },
                     { label: 'In Progress', value: 'in_progress' },
@@ -212,6 +249,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 <label className="text-xs font-semibold text-brand-muted uppercase tracking-wide mb-1.5 block">Priority</label>
                 <Select
                   value={ticket.priority}
+                  onChange={(e) => handleUpdateTicket({ priority: e.target.value as any })}
                   options={[
                     { label: 'Low', value: 'low' },
                     { label: 'Medium', value: 'medium' },
@@ -226,6 +264,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
                 <label className="text-xs font-semibold text-brand-muted uppercase tracking-wide mb-1.5 block">Assignee</label>
                 <Select
                   value={ticket.assignedTo || 'unassigned'}
+                  onChange={(e) => handleUpdateTicket({ assignedTo: e.target.value === 'unassigned' ? '' : e.target.value })}
                   options={[
                     { label: 'Unassigned', value: 'unassigned' },
                     { label: 'David Chen', value: 'David Chen' },

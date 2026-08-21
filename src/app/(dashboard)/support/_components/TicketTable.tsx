@@ -68,6 +68,9 @@ export function TicketTable({ data }: TicketTableProps) {
               <TableCell>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-brand-dark">{ticket.businessName}</span>
+                  {ticket.branchName && (
+                    <span className="text-xs text-brand-primary/80 font-medium">Branch: {ticket.branchName}</span>
+                  )}
                   <span className="text-xs text-brand-muted">{ticket.contactPerson}</span>
                 </div>
               </TableCell>

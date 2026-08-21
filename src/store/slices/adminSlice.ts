@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5001/api';
+import axiosInstance from '@/lib/axios';
 
 export interface Admin {
   id: string;
@@ -35,7 +33,7 @@ export const fetchAdmins = createAsyncThunk(
   'admin/fetchAdmins',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/admin`);
+      const response = await axiosInstance.get(`/admin`);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch admins');
@@ -47,7 +45,7 @@ export const updateAdminStatus = createAsyncThunk(
   'admin/updateAdminStatus',
   async ({ id, is_active }: { id: string; is_active: boolean }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`${API_URL}/admin/${id}`, { is_active });
+      const response = await axiosInstance.put(`/admin/${id}`, { is_active });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to update admin');

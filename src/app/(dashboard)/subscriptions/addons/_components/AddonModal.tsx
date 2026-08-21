@@ -10,6 +10,21 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Store, Users, DollarSign, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+const addonSchema = z.object({
+  branches: z.number().min(0, 'Must be 0 or more'),
+  teamMembers: z.number().min(0, 'Must be 0 or more'),
+  amount: z.number().min(0, 'Amount cannot be negative'),
+  paymentMethod: z.string().min(1, 'Payment method is required'),
+}).refine(data => data.branches > 0 || data.teamMembers > 0, {
+  message: "Please add at least one branch or team member",
+  path: ["branches"],
+});
+
+type AddonFormValues = z.infer<typeof addonSchema>;
 
 interface AddonModalProps {
   isOpen: boolean;
@@ -19,33 +34,33 @@ interface AddonModalProps {
 
 export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
   const dispatch = useAppDispatch();
-  const [branches, setBranches] = useState(0);
-  const [teamMembers, setTeamMembers] = useState(0);
-  const [amount, setAmount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("Card");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<AddonFormValues>({
+    resolver: zodResolver(addonSchema),
+    defaultValues: {
+      branches: 0,
+      teamMembers: 0,
+      amount: undefined,
+      paymentMethod: "Card",
+    }
+  });
 
   if (!business) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (branches === 0 && teamMembers === 0) {
-      toast.error("Please add at least one branch or team member");
-      return;
-    }
-
+  const onSubmit = async (data: AddonFormValues) => {
     setIsSubmitting(true);
     try {
       await dispatch(
         purchaseAddons({
           business_id: business.id,
           addons: {
-            branches: branches,
-            team_members: teamMembers,
+            branches: data.branches,
+            team_members: data.teamMembers,
           },
-          amount: amount,
+          amount: data.amount,
           currency: "USD",
-          payment_method: paymentMethod,
+          payment_method: data.paymentMethod,
         }),
       ).unwrap();
 
@@ -56,9 +71,7 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
       dispatch(fetchInvoices());
 
       // Reset form
-      setBranches(0);
-      setTeamMembers(0);
-      setAmount(0);
+      reset();
       onClose();
     } catch (err: any) {
       toast.error(err || "Failed to purchase add-ons");
@@ -67,31 +80,32 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
     }
   };
 
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Purchase Add-ons"
       description={`Add extra branches or staff to ${business.name}'s subscription limit.`}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-brand-dark">
               Additional Branches
             </label>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Store className="h-4 w-4 text-brand-muted" />
-              </div>
-              <Input
-                type="number"
-                min="0"
-                value={branches}
-                onChange={(e) => setBranches(parseInt(e.target.value) || 0)}
-                className="pl-9"
-              />
-            </div>
+            <Input
+              type="number"
+              min="0"
+              icon={<Store className="h-4 w-4" />}
+              defaultValue="0"
+              {...register('branches', { valueAsNumber: true })}
+              error={errors.branches?.message}
+            />
             <p className="mt-1 text-xs text-brand-muted">
               Current limit: {business.subscription_plan?.max_branches || 0}{" "}
               (Base) + {business.extra_branches || 0} (Extra)
@@ -102,18 +116,14 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
             <label className="mb-1 block text-sm font-medium text-brand-dark">
               Additional Staff
             </label>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Users className="h-4 w-4 text-brand-muted" />
-              </div>
-              <Input
-                type="number"
-                min="0"
-                value={teamMembers}
-                onChange={(e) => setTeamMembers(parseInt(e.target.value) || 0)}
-                className="pl-9"
-              />
-            </div>
+            <Input
+              type="number"
+              min="0"
+              icon={<Users className="h-4 w-4" />}
+              defaultValue="0"
+              {...register('teamMembers', { valueAsNumber: true })}
+              error={errors.teamMembers?.message}
+            />
             <p className="mt-1 text-xs text-brand-muted">
               Current limit: {business.subscription_plan?.max_team_members || 0}{" "}
               (Base) + {business.extra_team_members || 0} (Extra)
@@ -124,20 +134,15 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
             <label className="mb-1 block text-sm font-medium text-brand-dark">
               Total Custom Price ($)
             </label>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <DollarSign className="h-4 w-4 text-brand-muted" />
-              </div>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-                className="pl-9"
-                required
-              />
-            </div>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              icon={<DollarSign className="h-4 w-4" />}
+              placeholder="e.g. 1000"
+              {...register('amount', { valueAsNumber: true })}
+              error={errors.amount?.message}
+            />
             <p className="mt-1 text-xs text-brand-muted">
               This amount will be billed immediately and an invoice will be
               generated.
@@ -150,15 +155,15 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
             </label>
             <div className="relative">
               <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full h-10 px-3 py-2 text-sm bg-white border border-brand-border rounded-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary placeholder:text-brand-placeholder text-brand-dark appearance-none"
+                {...register('paymentMethod')}
+                className={`w-full h-10 px-3 py-2 text-sm bg-white border ${errors.paymentMethod ? 'border-brand-danger ring-2 ring-brand-danger/20' : 'border-brand-border focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary'} rounded-lg outline-none transition-all duration-200 placeholder:text-brand-placeholder text-brand-dark appearance-none`}
               >
                 <option value="Card">Card</option>
                 <option value="UPI">UPI</option>
                 <option value="Bank Transfer">Bank Transfer</option>
                 <option value="Cash">Cash</option>
               </select>
+              {errors.paymentMethod && <p className="mt-1 text-xs font-medium text-brand-danger">{errors.paymentMethod.message}</p>}
             </div>
           </div>
         </div>
@@ -167,7 +172,7 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isSubmitting}
           >
             Cancel

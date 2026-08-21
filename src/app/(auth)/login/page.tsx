@@ -8,24 +8,43 @@ import { loginUser } from '@/store/slices/authSlice';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Eye, EyeOff, Zap, Mail, Lock, ShieldCheck } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   
-  const [email, setEmail] = useState('superadmin@possoftware.dev');
-  const [password, setPassword] = useState('password123');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: 'superadmin@possoftware.dev',
+      password: 'password123',
+    },
+  });
+
+  const onSubmit = async (data: LoginFormValues) => {
     setError('');
     setLoading(true);
 
     try {
-      await dispatch(loginUser({ email, password })).unwrap();
+      await dispatch(loginUser({ email: data.email, password: data.password })).unwrap();
       router.push('/dashboard');
     } catch (err: any) {
       setError(err || 'An error occurred during login');
@@ -105,16 +124,15 @@ export default function LoginPage() {
             <span className="text-xs text-brand-success">Secure admin access — Super Admin only</span>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4" id="login-form">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="login-form">
             <Input
               id="login-email"
               label="Email Address"
               type="email"
               placeholder="admin@platform.in"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               icon={<Mail className="h-4 w-4" />}
-              required
+              {...register('email')}
+              error={errors.email?.message}
             />
 
             <Input
@@ -122,15 +140,14 @@ export default function LoginPage() {
               label="Password"
               type={showPass ? 'text' : 'password'}
               placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               icon={<Lock className="h-4 w-4" />}
               iconRight={
                 <button type="button" onClick={() => setShowPass((v) => !v)} className="cursor-pointer">
                   {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               }
-              required
+              {...register('password')}
+              error={errors.password?.message}
             />
 
             {error && (
