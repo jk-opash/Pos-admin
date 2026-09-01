@@ -16,7 +16,7 @@ export default function NotificationsPage() {
   
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   
   const [filterType, setFilterType] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -204,6 +204,9 @@ export default function NotificationsPage() {
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
+              totalItems={filteredNotifications.length}
             />
           </div>
         )}
