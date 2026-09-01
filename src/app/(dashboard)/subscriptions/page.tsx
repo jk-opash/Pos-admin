@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 export default function SubscriptionsDashboard() {
   const dispatch = useAppDispatch();
@@ -70,6 +71,14 @@ export default function SubscriptionsDashboard() {
 
   const isLoading =
     subLoading && busLoading && !businesses.length && !invoices.length;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-40">
+        <LottieLoader size="lg" text="Loading dashboard..." />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12">

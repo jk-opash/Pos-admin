@@ -172,7 +172,7 @@ export default function NotificationsPage() {
                     <div>
                       <div className={`text-sm ${notif.isRead ? 'font-medium text-slate-700' : 'font-bold text-slate-900'}`}>
                         {notif.title}
-                        {!notif.isRead && <Badge variant="blue" className="ml-2 text-[9px] py-0">New</Badge>}
+                        {!notif.isRead && <Badge variant="info" className="ml-2 text-[9px] py-0">New</Badge>}
                       </div>
                       <div className="text-xs text-slate-500 mt-1 line-clamp-1">{notif.message}</div>
                     </div>

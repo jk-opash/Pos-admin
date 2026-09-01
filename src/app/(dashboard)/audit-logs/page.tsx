@@ -12,6 +12,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { ActivitySquare, ShieldAlert, ShieldX, Download } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchAuditLogs } from '@/store/slices/auditLogSlice';
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 export default function AuditLogsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,8 +110,8 @@ export default function AuditLogsPage() {
         />
 
         {isLoading ? (
-          <div className="py-16 text-center text-sm font-medium text-brand-muted">
-            Loading system logs...
+          <div className="flex justify-center py-16">
+            <LottieLoader size="lg" text="Loading system logs..." />
           </div>
         ) : (
           <>

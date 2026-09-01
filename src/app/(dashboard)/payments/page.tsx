@@ -13,6 +13,7 @@ import { Search, Plus, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchInvoices } from "@/store/slices/subscriptionSlice";
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -96,6 +97,14 @@ export default function PaymentsPage() {
   const totalVolume = filteredPayments
     .filter((p) => p.status === "success")
     .reduce((acc, curr) => acc + curr.amount, 0);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-40">
+        <LottieLoader size="lg" text="Loading payments..." />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

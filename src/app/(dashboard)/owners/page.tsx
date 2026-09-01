@@ -7,8 +7,8 @@ import { fetchAdmins } from '@/store/slices/adminSlice';
 import { Users, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { OwnerTable } from './_components/OwnerTable';
-
 import { Input } from '@/components/ui/Input';
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 export default function OwnersPage() {
   const dispatch = useAppDispatch();
@@ -52,11 +52,8 @@ export default function OwnersPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          <div className="h-12 w-full rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-16 w-full rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-16 w-full rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-16 w-full rounded-xl bg-slate-100 animate-pulse" />
+        <div className="flex justify-center items-center py-20">
+          <LottieLoader size="lg" text="Loading owners..." />
         </div>
       ) : (
         <OwnerTable data={filteredAdmins} />

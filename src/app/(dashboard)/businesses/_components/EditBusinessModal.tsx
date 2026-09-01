@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Store, MapPin, FileText, User, Sliders, Loader2 } from "lucide-react";
+import { Store, MapPin, FileText, User, Sliders } from "lucide-react";
 import { Business, BusinessType } from "@/types";
 import { useAppDispatch } from "@/store/hooks";
 import { updateBusiness } from "@/store/slices/businessSlice";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 const businessSchema = z.object({
   name: z.string().min(1, "Business Name is required"),
@@ -527,7 +528,7 @@ export function EditBusinessModal({
               disabled={isSaving}
               className="bg-brand-primary hover:bg-brand-primaryDark text-white px-8 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
             >
-              {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {isSaving && <LottieLoader size="xs" className="mr-2" />}
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>

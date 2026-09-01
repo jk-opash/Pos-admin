@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EditBusinessModal } from "../_components/EditBusinessModal";
 import { formatDate } from "@/lib/utils";
-import { Building, Edit, ChevronLeft, Loader2 } from "lucide-react";
+import { Building, Edit, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { LottieLoader } from "@/components/ui/LottieLoader";
 import {
   BusinessStatus,
   SubscriptionPlanSlug,
@@ -217,8 +218,7 @@ export default function BusinessProfilePage() {
   if (loading && !business) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
-        <p className="mt-4 text-brand-muted">Loading business details...</p>
+        <LottieLoader size="lg" text="Loading business details..." />
       </div>
     );
   }
@@ -283,7 +283,7 @@ export default function BusinessProfilePage() {
               disabled={isSaving}
             >
               {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <LottieLoader size="xs" />
               ) : (
                 "Restore Access"
               )}
@@ -296,7 +296,7 @@ export default function BusinessProfilePage() {
               disabled={isSaving}
             >
               {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <LottieLoader size="xs" />
               ) : (
                 "Suspend"
               )}

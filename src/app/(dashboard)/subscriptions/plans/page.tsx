@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Plus, CheckCircle2, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { LottieLoader } from "@/components/ui/LottieLoader";
 import { PlanCard } from "@/app/(dashboard)/subscriptions/_components/PlanCard";
 import { SubscriptionPlan } from "@/types";
 
@@ -95,6 +96,14 @@ export default function PlansPage() {
     if (activeTab === "archived") return false; // Dummy logic
     return true;
   });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-40">
+        <LottieLoader size="lg" text="Loading plans..." />
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen space-y-8 pb-12">

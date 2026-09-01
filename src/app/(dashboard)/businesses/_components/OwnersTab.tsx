@@ -8,6 +8,7 @@ import { OwnerTable } from "./OwnerTable";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
 import { Select } from "@/components/ui/Select";
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 export function OwnersTab() {
   const dispatch = useAppDispatch();
@@ -71,11 +72,8 @@ export function OwnersTab() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          <div className="h-12 w-full rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-16 w-full rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-16 w-full rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-16 w-full rounded-xl bg-slate-100 animate-pulse" />
+        <div className="flex justify-center items-center py-20">
+          <LottieLoader size="lg" text="Loading owners..." />
         </div>
       ) : (
         <>

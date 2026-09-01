@@ -37,6 +37,7 @@ import {
   fetchSubscriptions,
 } from "@/store/slices/subscriptionSlice";
 import { fetchBusinesses } from "@/store/slices/businessSlice";
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 import {
   AreaChart,
@@ -451,6 +452,14 @@ export default function RevenueAnalyticsDashboard() {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-40">
+        <LottieLoader size="lg" text="Loading analytics..." />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12">

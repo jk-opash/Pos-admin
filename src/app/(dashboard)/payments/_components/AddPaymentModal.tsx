@@ -6,6 +6,8 @@ import { Payment } from '@/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useState } from 'react';
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 const paymentSchema = z.object({
   businessId: z.string().min(1, 'Business ID is required'),
@@ -23,6 +25,7 @@ interface AddPaymentModalProps {
 }
 
 export function AddPaymentModal({ isOpen, onClose, onAdd }: AddPaymentModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit, formState: { errors }, reset } = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
@@ -33,7 +36,11 @@ export function AddPaymentModal({ isOpen, onClose, onAdd }: AddPaymentModalProps
     },
   });
 
-  const onSubmit = (data: PaymentFormValues) => {
+  const onSubmit = async (data: PaymentFormValues) => {
+    setIsSubmitting(true);
+    // Simulate network request for adding payment
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     const newPayment: Payment = {
       id: `pay_${Math.random().toString(36).substring(2, 9)}`,
       businessId: data.businessId,
@@ -52,6 +59,7 @@ export function AddPaymentModal({ isOpen, onClose, onAdd }: AddPaymentModalProps
 
     onAdd(newPayment);
     reset();
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -110,8 +118,11 @@ export function AddPaymentModal({ isOpen, onClose, onAdd }: AddPaymentModalProps
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-brand-border">
-          <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
-          <Button type="submit" variant="primary">Add Payment</Button>
+          <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>Cancel</Button>
+          <Button type="submit" variant="primary" disabled={isSubmitting} className="flex items-center gap-2">
+            {isSubmitting && <LottieLoader size="xs" />}
+            {isSubmitting ? "Adding..." : "Add Payment"}
+          </Button>
         </div>
       </form>
     </Modal>

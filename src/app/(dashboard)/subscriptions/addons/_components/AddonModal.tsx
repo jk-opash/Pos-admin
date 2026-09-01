@@ -8,11 +8,12 @@ import { fetchBusinesses } from "@/store/slices/businessSlice";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Store, Users, DollarSign, Loader2 } from "lucide-react";
+import { Store, Users, DollarSign } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 const addonSchema = z.object({
   branches: z.number().min(0, 'Must be 0 or more'),
@@ -180,7 +181,7 @@ export function AddonModal({ isOpen, onClose, business }: AddonModalProps) {
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <LottieLoader size="xs" className="mr-2" />
                 Processing...
               </>
             ) : (

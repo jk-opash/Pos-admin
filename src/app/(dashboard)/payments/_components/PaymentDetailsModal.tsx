@@ -1,7 +1,8 @@
 import { Payment } from '@/types';
 import { Modal } from '@/components/ui/Modal';
-import { Download, Loader2 } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { LottieLoader } from "@/components/ui/LottieLoader";
 
 interface PaymentDetailsModalProps {
   isOpen: boolean;
@@ -87,7 +88,7 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
         <div className="flex-1 w-full h-full relative">
           {isPreviewLoading ? (
             <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/50 backdrop-blur-sm z-10">
-              <Loader2 className="h-8 w-8 animate-spin text-brand-primary mb-2" />
+              <LottieLoader size="lg" className="mb-2" />
               <p className="text-sm font-medium text-brand-muted">Generating PDF preview...</p>
             </div>
           ) : pdfPreviewUrl ? (
@@ -111,7 +112,7 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
             disabled={downloading || isPreviewLoading}
             className="px-6 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold hover:bg-brand-primaryDark transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
           >
-            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} 
+            {downloading ? <LottieLoader size="xs" /> : <Download className="h-4 w-4" />} 
             {downloading ? 'Generating...' : 'Download Receipt'}
           </button>
         </div>
