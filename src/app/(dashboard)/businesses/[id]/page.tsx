@@ -132,12 +132,25 @@ export default function BusinessProfilePage() {
         legalName: currentBusiness.legal_name || "",
         gstin: currentBusiness.gstin || "",
         pan: currentBusiness.pan || "",
+        businessRegistrationNumber:
+          currentBusiness.business_registration_number || "",
+        dateOfBirth: currentBusiness.date_of_birth || "",
+        gender: currentBusiness.gender || "",
+        gstCertificate: currentBusiness.gst_certificate || "",
+        panCard: currentBusiness.pan_card || "",
+        tradeLicense: currentBusiness.trade_license || "",
+        identityVerification:
+          currentBusiness.identity_verification || "pending",
+        extraBranches: currentBusiness.extra_branches || 0,
+        extraTeamMembers: currentBusiness.extra_team_members || 0,
         subscription: currentBusiness.subscription_plan
           ? {
               plan: currentBusiness.subscription_plan
                 .plan as SubscriptionPlanSlug,
               status: currentBusiness.subscription_plan.status,
-              endsAt: currentBusiness.subscription_plan.updated_at,
+              startDate: currentBusiness.subscription_plan.current_period_start,
+              endsAt: currentBusiness.subscription_plan.current_period_end,
+              trialEndDate: currentBusiness.subscription_plan.trial_end_date,
               autoRenew: currentBusiness.subscription_plan.auto_renew,
               maxBranches: currentBusiness.subscription_plan.max_branches,
               maxUsers: currentBusiness.subscription_plan.max_team_members,
@@ -184,6 +197,19 @@ export default function BusinessProfilePage() {
         pincode: business.address.pincode,
         gstin: business.gstin,
         pan: business.pan,
+        business_registration_number: business.businessRegistrationNumber,
+        date_of_birth: business.dateOfBirth,
+        gender: business.gender,
+        gst_certificate: business.gstCertificate,
+        pan_card: business.panCard,
+        trade_license: business.tradeLicense,
+        identity_verification: business.identityVerification,
+        extra_branches: business.extraBranches,
+        extra_team_members: business.extraTeamMembers,
+        subscription_plan: business.subscription?.plan,
+        subscription_status: business.subscription?.status,
+        subscription_ends_at: business.subscription?.endsAt,
+        subscription_auto_renew: business.subscription?.autoRenew,
       };
       await dispatch(updateBusiness({ id, data: backendData })).unwrap();
       setIsEditModalOpen(false);
@@ -282,11 +308,7 @@ export default function BusinessProfilePage() {
               onClick={() => handleToggleSuspend(false)}
               disabled={isSaving}
             >
-              {isSaving ? (
-                <LottieLoader size="xs" />
-              ) : (
-                "Restore Access"
-              )}
+              {isSaving ? <LottieLoader size="xs" /> : "Restore Access"}
             </Button>
           ) : (
             <Button
@@ -295,11 +317,7 @@ export default function BusinessProfilePage() {
               onClick={() => handleToggleSuspend(true)}
               disabled={isSaving}
             >
-              {isSaving ? (
-                <LottieLoader size="xs" />
-              ) : (
-                "Suspend"
-              )}
+              {isSaving ? <LottieLoader size="xs" /> : "Suspend"}
             </Button>
           )}
           <Button

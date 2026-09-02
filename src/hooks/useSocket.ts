@@ -20,6 +20,7 @@ export const useSocket = () => {
       if (!token) return;
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://pos-backend-qcky.onrender.com/api';
+      // const apiUrl = 'http://localhost:5001/api';
       const baseUrl = apiUrl.replace(/\/api\/?$/, '');
 
       socketRef.current = io(baseUrl, {

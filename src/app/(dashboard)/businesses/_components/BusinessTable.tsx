@@ -35,8 +35,9 @@ export function BusinessTable({ data, onStatusChange }: BusinessTableProps) {
             <TableHead>Business Info</TableHead>
             <TableHead>Owner</TableHead>
             <TableHead>Plan & Status</TableHead>
-            <TableHead>MRR & Storage</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead>Renewal Date</TableHead>
+            <TableHead>Branches & Team</TableHead>
+            <TableHead>Plan Start Date</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -68,23 +69,30 @@ export function BusinessTable({ data, onStatusChange }: BusinessTableProps) {
                   <StatusBadge status={biz.status} />
                 </div>
               </TableCell>
+
+              <TableCell>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="text-sm font-medium text-brand-dark">
+                    {biz.subscription.endsAt ? formatDate(biz.subscription.endsAt) : "N/A"}
+                  </span>
+                  {getDaysRemainingBadge(biz.subscription.endsAt)}
+                </div>
+              </TableCell>
               
               <TableCell>
                 <div className="flex flex-col gap-1">
                   <span className="text-sm font-medium text-brand-dark">
-                    {formatCurrency(biz.stats.revenueMTD)}
+                    {biz.stats.branches} Branches
                   </span>
-                  <div className="flex gap-2 text-xs text-brand-muted">
-                    <span>{biz.stats.branches} branches</span>
-                    <span>•</span>
-                    <span>{biz.stats.storageUsed || 0} GB</span>
-                  </div>
+                  <span className="text-xs text-brand-muted">
+                    {biz.stats.users} team members
+                  </span>
                 </div>
               </TableCell>
               
               <TableCell>
                 <span className="text-sm text-brand-muted">
-                  {formatDate(biz.createdAt)}
+                  {biz.subscription.startDate ? formatDate(biz.subscription.startDate) : "N/A"}
                 </span>
               </TableCell>
               
@@ -138,6 +146,25 @@ function PlanBadge({ plan }: { plan: SubscriptionPlanSlug }) {
       return <Badge variant="success">Starter</Badge>;
     default:
       return <Badge variant="warning">Free Trial</Badge>;
+  }
+}
+
+function getDaysRemainingBadge(endDateStr: string | undefined | null) {
+  if (!endDateStr) return null;
+  
+  const end = new Date(endDateStr);
+  const now = new Date();
+  const diffTime = end.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) {
+    return <Badge variant="danger" className="px-1.5 py-0 text-[10px]">Expired</Badge>;
+  } else if (diffDays <= 7) {
+    return <Badge variant="danger" className="px-1.5 py-0 text-[10px]">Critical: {diffDays} days left</Badge>;
+  } else if (diffDays <= 30) {
+    return <Badge variant="warning" className="px-1.5 py-0 text-[10px]">{diffDays} days left</Badge>;
+  } else {
+    return <Badge variant="success" className="px-1.5 py-0 text-[10px]">{diffDays} days left</Badge>;
   }
 }
 

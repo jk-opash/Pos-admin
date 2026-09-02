@@ -22,8 +22,12 @@ const planSchema = z.object({
   currency: z.string().min(1, "Currency is required"),
   billing_cycle: z.string().min(1, "Billing cycle is required"),
   amount: z.number().min(0, "Amount must be a positive number or 0"),
-  max_branches: z.number().min(0, "Must be a valid number (use 0 for unlimited)"),
-  max_team_members: z.number().min(0, "Must be a valid number (use 0 for unlimited)"),
+  max_branches: z
+    .number()
+    .min(0, "Must be a valid number (use 0 for unlimited)"),
+  max_team_members: z
+    .number()
+    .min(0, "Must be a valid number (use 0 for unlimited)"),
   auto_renew: z.boolean(),
   cancel_at_period_end: z.boolean(),
   is_active: z.boolean(),
@@ -46,7 +50,7 @@ export default function NewPlanPage() {
       plan: "starter",
       status: "active",
       currency: "INR",
-      billing_cycle: "yearly",
+      billing_cycle: "monthly",
       amount: 0,
       max_branches: 1,
       max_team_members: 5,
@@ -196,7 +200,10 @@ export default function NewPlanPage() {
                 label="Billing Cycle *"
                 {...register("billing_cycle")}
                 error={errors.billing_cycle?.message}
-                options={[{ label: "Yearly", value: "yearly" }]}
+                options={[
+                  { label: "Monthly", value: "monthly" },
+                  { label: "Yearly", value: "yearly" },
+                ]}
               />
               <Input
                 label="Amount / Price *"

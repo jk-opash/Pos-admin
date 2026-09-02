@@ -58,7 +58,7 @@ export const markAllAsRead = createAsyncThunk(
   'notifications/markAllAsRead',
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.post(`/notifications/read-all`);
+      const res = await axiosInstance.patch(`/notifications/read-all`);
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.error || 'Failed to mark all as read');

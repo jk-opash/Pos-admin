@@ -55,7 +55,9 @@ export function BusinessesTab() {
         ? {
             plan: req.subscription_plan.plan as SubscriptionPlanSlug,
             status: req.subscription_plan.status,
-            endsAt: req.subscription_plan.updated_at,
+            endsAt: req.subscription_plan.current_period_end,
+            startDate: req.subscription_plan.current_period_start,
+            trialEndDate: req.subscription_plan.trial_end_date,
             autoRenew: req.subscription_plan.auto_renew,
             maxBranches: req.subscription_plan.max_branches,
             maxUsers: req.subscription_plan.max_team_members,

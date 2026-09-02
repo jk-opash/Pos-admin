@@ -22,7 +22,9 @@ export function SubscriptionTab({ business }: { business: Business }) {
   const maxBranches = baseBranches + extraBranches;
   const maxUsers = baseUsers + extraUsers;
   const mrrAmount = subPlan?.amount ? Number(subPlan.amount) : business.stats.revenueMTD;
-  const renewalDate = subPlan?.updated_at || business.subscription.endsAt;
+  const startDate = subPlan?.current_period_start || business.subscription.startDate;
+  const renewalDate = subPlan?.current_period_end || business.subscription.endsAt;
+  const trialEndDate = subPlan?.trial_end_date || business.subscription.trialEndDate;
   const isAutoRenew = subPlan?.auto_renew ?? business.subscription.autoRenew;
 
   const branchPercentage = Math.min(Math.round((business.stats.branches / (maxBranches || 1)) * 100), 100);
@@ -40,7 +42,7 @@ export function SubscriptionTab({ business }: { business: Business }) {
           <Button variant="outline">Change Plan</Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-brand-border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 pt-4 border-t border-brand-border">
           <div>
             <p className="text-xs text-brand-placeholder mb-1">Plan</p>
             <div className="flex items-center gap-2">
@@ -49,8 +51,16 @@ export function SubscriptionTab({ business }: { business: Business }) {
             </div>
           </div>
           <div>
+            <p className="text-xs text-brand-placeholder mb-1">Start Date</p>
+            <p className="font-medium text-brand-dark">{startDate ? formatDate(startDate) : "N/A"}</p>
+          </div>
+          <div>
             <p className="text-xs text-brand-placeholder mb-1">Renewal Date</p>
-            <p className="font-medium text-brand-dark">{formatDate(renewalDate)}</p>
+            <p className="font-medium text-brand-dark">{renewalDate ? formatDate(renewalDate) : "N/A"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-brand-placeholder mb-1">Trial Ends</p>
+            <p className="font-medium text-brand-dark">{trialEndDate ? formatDate(trialEndDate) : "N/A"}</p>
           </div>
           <div>
             <p className="text-xs text-brand-placeholder mb-1">Monthly MRR</p>

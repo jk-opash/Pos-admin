@@ -49,6 +49,15 @@ export interface Business {
   emergencyContact?: string;
   gstin?: string;
   pan?: string;
+  businessRegistrationNumber?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  gstCertificate?: string;
+  panCard?: string;
+  tradeLicense?: string;
+  identityVerification?: string;
+  extraBranches?: number;
+  extraTeamMembers?: number;
   address: {
     line1?: string;
     line2?: string;
@@ -60,7 +69,9 @@ export interface Business {
   subscription: {
     plan: SubscriptionPlanSlug;
     status: SubscriptionStatus;
+    startDate?: string;
     endsAt: string;
+    trialEndDate?: string;
     autoRenew: boolean;
     maxBranches?: number;
     maxUsers?: number;

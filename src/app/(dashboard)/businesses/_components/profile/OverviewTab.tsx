@@ -50,6 +50,10 @@ export function OverviewTab({ business }: { business: Business }) {
                 <span className="text-brand-placeholder">PAN</span>
                 <span className="font-medium text-brand-dark">{business.pan || "Not Provided"}</span>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-placeholder">Reg. No</span>
+                <span className="font-medium text-brand-dark">{business.businessRegistrationNumber || "Not Provided"}</span>
+              </div>
             </div>
           </div>
         </Card>
@@ -59,10 +63,17 @@ export function OverviewTab({ business }: { business: Business }) {
             <FileCheck className="h-4 w-4 text-brand-placeholder" /> KYC Documents
           </h3>
           <div className="space-y-3">
-            {['Identity (PAN)', 'Business (GST)', 'Bank Details'].map((doc, i) => (
+            {[
+              { label: 'Identity (PAN)', path: business.panCard, status: business.identityVerification },
+              { label: 'Business (GST)', path: business.gstCertificate, status: business.identityVerification },
+              { label: 'Trade License', path: business.tradeLicense, status: business.identityVerification },
+            ].map((doc, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm">
-                <span className="text-brand-muted">{doc}</span>
-                {business.kyc.status === "verified" ? (
+                <div className="flex flex-col">
+                  <span className="text-brand-muted">{doc.label}</span>
+                  {doc.path && <span className="text-xs text-brand-primary truncate max-w-[180px]">{doc.path.split('/').pop()}</span>}
+                </div>
+                {doc.status === "verified" || business.kyc.status === "verified" ? (
                   <Badge variant="success" className="gap-1 px-1.5 py-0">
                     <CheckCircle2 className="h-3 w-3" /> Verified
                   </Badge>
