@@ -14,14 +14,15 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
   // Close sidebar on route change on mobile
   useEffect(() => {
     if (onClose) onClose();
-  }, [pathname, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   return (
     <>
       {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-tooltip bg-brand-dark/40 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[998] bg-brand-dark/40 backdrop-blur-sm md:hidden"
           onClick={onClose}
         />
       )}
