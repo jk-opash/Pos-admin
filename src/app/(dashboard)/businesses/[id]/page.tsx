@@ -143,26 +143,16 @@ export default function BusinessProfilePage() {
           currentBusiness.identity_verification || "pending",
         extraBranches: currentBusiness.extra_branches || 0,
         extraTeamMembers: currentBusiness.extra_team_members || 0,
-        subscription: currentBusiness.subscription_plan
-          ? {
-              plan: currentBusiness.subscription_plan
-                .plan as SubscriptionPlanSlug,
-              status: currentBusiness.subscription_plan.status,
-              startDate: currentBusiness.subscription_plan.current_period_start,
-              endsAt: currentBusiness.subscription_plan.current_period_end,
-              trialEndDate: currentBusiness.subscription_plan.trial_end_date,
-              autoRenew: currentBusiness.subscription_plan.auto_renew,
-              maxBranches: currentBusiness.subscription_plan.max_branches,
-              maxUsers: currentBusiness.subscription_plan.max_team_members,
-            }
-          : {
-              plan: "free_trial",
-              status: "active",
-              endsAt: "N/A",
-              autoRenew: false,
-              maxBranches: 5,
-              maxUsers: 50,
-            },
+        subscription: {
+          plan: (currentBusiness.subscription_plan?.plan as SubscriptionPlanSlug) || "free_trial",
+          status: currentBusiness.subscription_status || "active",
+          startDate: currentBusiness.subscription_starts_at || undefined,
+          endsAt: currentBusiness.subscription_ends_at || "N/A",
+          trialEndDate: currentBusiness.subscription_trial_end || undefined,
+          autoRenew: currentBusiness.subscription_auto_renew || false,
+          maxBranches: currentBusiness.subscription_plan?.max_branches ?? 5,
+          maxUsers: currentBusiness.subscription_plan?.max_team_members ?? 50,
+        },
         stats: {
           branches: currentBusiness.branches?.length ?? 0,
           users: currentBusiness.teamMembers?.length ?? 0,

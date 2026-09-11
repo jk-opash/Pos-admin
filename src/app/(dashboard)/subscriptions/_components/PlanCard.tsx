@@ -99,26 +99,26 @@ export function PlanCard({ plan }: { plan: SubscriptionPlan }) {
         <div className="flex items-center gap-1 mb-4">
           {isEnterprise ? (
             <span className="text-3xl font-bold">Custom</span>
-          ) : plan.pricing.monthly === 0 ? (
+          ) : plan.price === 0 ? (
             <span className="text-3xl font-bold">Free</span>
           ) : (
             <>
               <span className="text-3xl font-bold">
-                {formatCurrency(plan.pricing.monthly, true).replace(".00", "")}
+                {formatCurrency(plan.price, true).replace(".00", "")}
               </span>
             </>
           )}
-          {plan.pricing.monthly > 0 && !isEnterprise && (
+          {plan.price > 0 && !isEnterprise && (
             <div className="flex flex-col ml-1">
               <span
                 className={`text-[10px] leading-tight ${isEnterprise ? "text-slate-400" : "text-brand-muted"}`}
               >
-                INR / month
+                {plan.currency} / {plan.billingCycle.replace("-", " ")}
               </span>
               <span
-                className={`text-[10px] leading-tight ${isEnterprise ? "text-slate-400" : "text-brand-muted"}`}
+                className={`text-[10px] leading-tight ${isEnterprise ? "text-slate-400" : "text-brand-muted"} capitalize`}
               >
-                billed monthly
+                billed {plan.billingCycle.replace("-", " ")}
               </span>
             </div>
           )}

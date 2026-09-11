@@ -51,25 +51,16 @@ export function BusinessesTab() {
         country: req.country || "N/A",
         pincode: req.pincode || "N/A",
       },
-      subscription: req.subscription_plan
-        ? {
-            plan: req.subscription_plan.plan as SubscriptionPlanSlug,
-            status: req.subscription_plan.status,
-            endsAt: req.subscription_plan.current_period_end,
-            startDate: req.subscription_plan.current_period_start,
-            trialEndDate: req.subscription_plan.trial_end_date,
-            autoRenew: req.subscription_plan.auto_renew,
-            maxBranches: req.subscription_plan.max_branches,
-            maxUsers: req.subscription_plan.max_team_members,
-          }
-        : {
-            plan: "free_trial",
-            status: "active",
-            endsAt: "N/A",
-            autoRenew: false,
-            maxBranches: 5,
-            maxUsers: 50,
-          },
+      subscription: {
+        plan: (req.subscription_plan?.plan as SubscriptionPlanSlug) || "free_trial",
+        status: req.subscription_status || "active",
+        endsAt: req.subscription_ends_at || "N/A",
+        startDate: req.subscription_starts_at || undefined,
+        trialEndDate: req.subscription_trial_end || undefined,
+        autoRenew: req.subscription_auto_renew || false,
+        maxBranches: req.subscription_plan?.max_branches ?? 5,
+        maxUsers: req.subscription_plan?.max_team_members ?? 50,
+      },
       stats: {
         branches: req.branches?.length ?? 0,
         users: req.teamMembers?.length ?? 0,
@@ -93,10 +84,10 @@ export function BusinessesTab() {
   const filteredBusinesses = apiBusinesses.filter((biz) => {
     // Search match
     const matchesSearch =
-      biz.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      biz.owner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      biz.owner.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (biz.gstin && biz.gstin.toLowerCase().includes(searchTerm.toLowerCase()));
+      (biz.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (biz.owner?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (biz.owner?.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (biz.gstin?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
     // Status match
     const matchesStatus = statusFilter === "all" || biz.status === statusFilter;

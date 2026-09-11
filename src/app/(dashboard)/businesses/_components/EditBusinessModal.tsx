@@ -13,6 +13,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LottieLoader } from "@/components/ui/LottieLoader";
 
+const formatDate = (dateString?: string | Date | null) => {
+  if (!dateString) return "";
+  const d = new Date(dateString);
+  return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+};
+
 const businessSchema = z.object({
   name: z.string().min(1, "Business Name is required"),
   type: z.enum([
@@ -132,7 +138,7 @@ export function EditBusinessModal({
         gstin: initialBusiness.gstin || "",
         pan: initialBusiness.pan || "",
         businessRegistrationNumber: initialBusiness.businessRegistrationNumber || "",
-        dateOfBirth: initialBusiness.dateOfBirth ? new Date(initialBusiness.dateOfBirth).toISOString().split('T')[0] : "",
+        dateOfBirth: formatDate(initialBusiness.dateOfBirth),
         gender: initialBusiness.gender || "",
         gstCertificate: initialBusiness.gstCertificate || "",
         panCard: initialBusiness.panCard || "",
@@ -140,9 +146,9 @@ export function EditBusinessModal({
         subscription: {
           plan: initialBusiness.subscription?.plan || "free_trial",
           status: initialBusiness.subscription?.status || "active",
-          startDate: initialBusiness.subscription?.startDate ? new Date(initialBusiness.subscription.startDate).toISOString().split('T')[0] : "",
-          endsAt: initialBusiness.subscription?.endsAt ? new Date(initialBusiness.subscription.endsAt).toISOString().split('T')[0] : "",
-          trialEndDate: initialBusiness.subscription?.trialEndDate ? new Date(initialBusiness.subscription.trialEndDate).toISOString().split('T')[0] : "",
+          startDate: formatDate(initialBusiness.subscription?.startDate),
+          endsAt: formatDate(initialBusiness.subscription?.endsAt),
+          trialEndDate: formatDate(initialBusiness.subscription?.trialEndDate),
           autoRenew: initialBusiness.subscription?.autoRenew ?? true,
           maxBranches: initialBusiness.subscription?.maxBranches || 1,
           maxUsers: initialBusiness.subscription?.maxUsers || 1,

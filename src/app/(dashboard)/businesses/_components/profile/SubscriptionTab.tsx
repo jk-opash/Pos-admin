@@ -22,10 +22,10 @@ export function SubscriptionTab({ business }: { business: Business }) {
   const maxBranches = baseBranches + extraBranches;
   const maxUsers = baseUsers + extraUsers;
   const mrrAmount = subPlan?.amount ? Number(subPlan.amount) : business.stats.revenueMTD;
-  const startDate = subPlan?.current_period_start || business.subscription.startDate;
-  const renewalDate = subPlan?.current_period_end || business.subscription.endsAt;
-  const trialEndDate = subPlan?.trial_end_date || business.subscription.trialEndDate;
-  const isAutoRenew = subPlan?.auto_renew ?? business.subscription.autoRenew;
+  const startDate = currentBusiness?.subscription_starts_at || business.subscription.startDate;
+  const renewalDate = currentBusiness?.subscription_ends_at || business.subscription.endsAt;
+  const trialEndDate = currentBusiness?.subscription_trial_end_date || business.subscription.trialEndDate;
+  const isAutoRenew = currentBusiness?.subscription_auto_renew ?? business.subscription.autoRenew;
 
   const branchPercentage = Math.min(Math.round((business.stats.branches / (maxBranches || 1)) * 100), 100);
   const userPercentage = Math.min(Math.round((business.stats.users / (maxUsers || 1)) * 100), 100);

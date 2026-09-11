@@ -42,10 +42,7 @@ export default function PlansPage() {
           : "free",
     billingCycle: sub.billing_cycle as any,
     currency: sub.currency as any,
-    pricing: {
-      monthly: parseFloat(sub.amount),
-      yearly: parseFloat(sub.amount) * 12 * 0.8, // Assuming 20% discount on yearly
-    },
+    price: parseFloat(sub.amount),
     limits: {
       branches: sub.max_branches || -1,
       employees: sub.max_team_members || -1,

@@ -22,7 +22,12 @@ export function StepSubscription() {
 
   useEffect(() => {
     if (subscriptions.length > 0 && !selectedPlan) {
-      dispatch(updateOnboardingForm({ subscriptionPlanId: subscriptions[0].id, billingCycle: "monthly" }));
+      dispatch(
+        updateOnboardingForm({
+          subscriptionPlanId: subscriptions[0].id,
+          billingCycle: "monthly",
+        }),
+      );
     }
   }, [subscriptions, selectedPlan, dispatch]);
 
@@ -55,11 +60,13 @@ export function StepSubscription() {
           <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {mappedPlans.map((p) => (
             <div
               key={p.id}
-              onClick={() => dispatch(updateOnboardingForm({ subscriptionPlanId: p.id }))}
+              onClick={() =>
+                dispatch(updateOnboardingForm({ subscriptionPlanId: p.id }))
+              }
               className={`relative cursor-pointer rounded-2xl border-2 p-5 transition-all ${
                 selectedPlan === p.id
                   ? "border-brand-primary bg-brand-primaryLight"

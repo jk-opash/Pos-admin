@@ -18,7 +18,6 @@ import * as z from "zod";
 
 const planSchema = z.object({
   plan: z.string().min(1, "Plan name is required"),
-  status: z.string().min(1, "Status is required"),
   currency: z.string().min(1, "Currency is required"),
   billing_cycle: z.string().min(1, "Billing cycle is required"),
   amount: z.number().min(0, "Amount must be a positive number or 0"),
@@ -28,9 +27,8 @@ const planSchema = z.object({
   max_team_members: z
     .number()
     .min(0, "Must be a valid number (use 0 for unlimited)"),
-  auto_renew: z.boolean(),
-  cancel_at_period_end: z.boolean(),
   is_active: z.boolean(),
+  is_public: z.boolean(),
 });
 
 type PlanFormValues = z.infer<typeof planSchema>;
@@ -43,20 +41,19 @@ export default function NewPlanPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<PlanFormValues>({
     resolver: zodResolver(planSchema),
     defaultValues: {
       plan: "starter",
-      status: "active",
       currency: "INR",
       billing_cycle: "monthly",
       amount: 0,
       max_branches: 1,
       max_team_members: 5,
-      auto_renew: true,
-      cancel_at_period_end: false,
       is_active: true,
+      is_public: true,
     },
   });
 
@@ -141,13 +138,14 @@ export default function NewPlanPage() {
                 ]}
               />
               <Select
-                label="Status *"
-                {...register("status")}
-                error={errors.status?.message}
+                label="Visibility *"
+                {...register("is_public", {
+                  setValueAs: (value) => value === "true",
+                })}
+                error={errors.is_public?.message}
                 options={[
-                  { label: "Active", value: "active" },
-                  { label: "Trialing", value: "trialing" },
-                  { label: "Draft", value: "draft" },
+                  { label: "Public", value: "true" },
+                  { label: "Private", value: "false" },
                 ]}
               />
               <div className="flex flex-col gap-2">
@@ -202,7 +200,10 @@ export default function NewPlanPage() {
                 error={errors.billing_cycle?.message}
                 options={[
                   { label: "Monthly", value: "monthly" },
+                  { label: "Quarterly", value: "quarterly" },
+                  { label: "Half-Yearly", value: "half-yearly" },
                   { label: "Yearly", value: "yearly" },
+                  { label: "Freely (Lifetime)", value: "freely" },
                 ]}
               />
               <Input
@@ -240,50 +241,6 @@ export default function NewPlanPage() {
                 {...register("max_team_members", { valueAsNumber: true })}
                 error={errors.max_team_members?.message}
               />
-            </div>
-          </div>
-        </div>
-
-        {/* Section: Renewal Settings */}
-        <div
-          id="renewal"
-          className="rounded-2xl border border-brand-border bg-white shadow-sm overflow-hidden scroll-mt-6"
-        >
-          <div className="px-6 py-4 border-b border-brand-border bg-brand-light">
-            <h2 className="font-bold text-brand-dark">Renewal Settings</h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  {...register("auto_renew")}
-                  className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
-                />
-                <div>
-                  <span className="text-sm font-medium text-brand-dark block">
-                    Auto Renew
-                  </span>
-                  <span className="text-xs text-brand-muted">
-                    Automatically renew plan at period end
-                  </span>
-                </div>
-              </label>
-              <label className="flex items-start gap-3 p-3 rounded-lg border border-brand-border hover:bg-brand-light cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  {...register("cancel_at_period_end")}
-                  className="mt-0.5 h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary"
-                />
-                <div>
-                  <span className="text-sm font-medium text-brand-dark block">
-                    Cancel at Period End
-                  </span>
-                  <span className="text-xs text-brand-muted">
-                    Terminate subscription when cycle ends
-                  </span>
-                </div>
-              </label>
             </div>
           </div>
         </div>

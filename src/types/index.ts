@@ -152,10 +152,7 @@ export interface SubscriptionPlan {
   planType: PlanType;
   billingCycle: BillingCycle;
   currency: Currency;
-  pricing: {
-    monthly: number;
-    yearly: number;
-  };
+  price: number;
   limits: PlanLimits;
   modules: PlanModules;
   features: PlanFeatures;
